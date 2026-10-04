@@ -1,0 +1,3060 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RentalEasy - Real Estate, Properties, Hostels & PGs in India</title>
+  <meta name="description" content="Find verified houses, flats, commercial spaces, and verified PG hostels with live bed vacancy counts across India. Direct owner contact with zero brokerage." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+
+  <!-- Google Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              200: '#99f6e4',
+              300: '#5eead4',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+              950: '#042f2e',
+            },
+            accent: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Prevent Unhandled Firebase Installations Warnings in sandbox -->
+  <script>
+    window.addEventListener('unhandledrejection', function(event) {
+      if (event.reason && (
+        String(event.reason).includes('installations/request-failed') ||
+        String(event.reason).includes('API key not valid')
+      )) {
+        event.preventDefault();
+      }
+    });
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.04);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(13, 148, 136, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(13, 148, 136, 0.7);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Subtle Anti-Scraping Security Watermark */
+    .watermark-overlay {
+      background-image: repeating-linear-gradient(
+        -30deg,
+        rgba(255, 255, 255, 0.04) 0px,
+        rgba(255, 255, 255, 0.04) 80px,
+        rgba(0, 0, 0, 0.03) 80px,
+        rgba(0, 0, 0, 0.03) 160px
+      );
+      pointer-events: none;
+    }
+
+    /* Content protection */
+    .protect-content {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* Leaflet pin styling */
+    .custom-map-pin {
+      background-color: #0d9488;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      border: 2px solid white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      white-space: nowrap;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .custom-map-pin:hover {
+      transform: scale(1.12);
+      background-color: #0f766e;
+    }
+    .custom-map-pin-pg {
+      background-color: #3b82f6;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      border: 2px solid white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      white-space: nowrap;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .custom-map-pin-external {
+      background-color: #64748b;
+      color: white;
+      font-weight: 700;
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 10px;
+      border: 2px dashed #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      white-space: nowrap;
+      text-align: center;
+      cursor: pointer;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen font-sans bg-gradient-to-b from-teal-50/80 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col protect-content">
+
+  <!-- =========================================================================
+       TOP NAVIGATION BAR (FROSTED GLASS, TRANSLUCENT & BACKDROP BLURRED)
+       ========================================================================= -->
+  <header class="sticky top-0 z-40 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" onclick="navigate('home'); return false;" class="flex items-center gap-2.5 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-teal-400 text-white flex items-center justify-center shadow-md shadow-brand-500/25 group-hover:scale-105 transition transform">
+          <i class="fa-solid fa-house-chimney-window text-lg"></i>
+        </div>
+        <div>
+          <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-brand-700 via-teal-600 to-emerald-600 dark:from-brand-400 dark:to-emerald-400 bg-clip-text text-transparent">
+            RentalEasy
+          </span>
+          <span class="block text-[10px] font-semibold text-slate-400 tracking-wider uppercase -mt-1">India</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden lg:flex items-center gap-1 xl:gap-2">
+        <button onclick="navigate('home')" class="px-3 py-1.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 transition">
+          Home
+        </button>
+        <button onclick="filterByTransaction('rent')" class="px-3 py-1.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 transition">
+          Rent
+        </button>
+        <button onclick="filterByTransaction('sale')" class="px-3 py-1.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 transition">
+          Buy
+        </button>
+        <button onclick="filterByTransaction('lease')" class="px-3 py-1.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 transition">
+          Commercial
+        </button>
+        <!-- Hostels & PG Main Nav Button -->
+        <button onclick="navigate('hostels')" class="px-3.5 py-1.5 rounded-xl text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition flex items-center gap-1.5 shadow-2xs">
+          <i class="fa-solid fa-bed text-xs"></i>
+          <span>Hostels & PG</span>
+          <span class="text-[9px] uppercase px-1.5 py-0.2 bg-blue-600 text-white rounded-md font-extrabold">Live</span>
+        </button>
+        <button onclick="navigate('favorites')" class="px-3 py-1.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 transition flex items-center gap-1.5">
+          <i class="fa-regular fa-heart text-xs"></i> Saved
+          <span id="savedCountBadge" class="hidden ml-1 px-1.5 py-0.2 text-[10px] bg-red-500 text-white rounded-full font-bold">0</span>
+        </button>
+      </nav>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Post Action Dropdown / Button -->
+        <div class="relative group">
+          <button onclick="handlePostPropertyClick()" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-brand-600/20 hover:shadow-brand-600/35 transition flex items-center gap-2">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Post Property</span>
+            <span class="hidden sm:inline-block bg-white/20 text-[10px] px-1.5 py-0.5 rounded font-extrabold uppercase">Free</span>
+          </button>
+        </div>
+
+        <!-- Post PG / Hostel Button -->
+        <button onclick="handlePostPgClick()" class="hidden md:flex px-3 py-2 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 text-xs font-bold hover:bg-blue-100 transition items-center gap-1.5">
+          <i class="fa-solid fa-hotel text-xs"></i>
+          <span>Post PG</span>
+        </button>
+
+        <!-- Dark Mode Toggle -->
+        <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="w-9 h-9 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 flex items-center justify-center transition">
+          <i id="themeToggleIcon" class="fa-solid fa-moon text-sm"></i>
+        </button>
+
+        <!-- User Authentication Status / Account Button -->
+        <div id="authContainer" class="relative">
+          <button id="loginBtn" onclick="openModal('authModal')" class="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+            <i class="fa-brands fa-google text-brand-600"></i>
+            <span>Sign In</span>
+          </button>
+
+          <div id="userProfileBtnContainer" class="hidden relative">
+            <button onclick="toggleUserDropdown()" class="flex items-center gap-2 p-1 pl-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 transition">
+              <img id="navUserPhoto" src="https://placehold.co/80x80/0d9488/ffffff?text=U" alt="Profile" class="w-7 h-7 rounded-lg object-cover" />
+              <span id="navUserName" class="hidden sm:inline-block text-xs font-bold text-slate-700 dark:text-slate-200 max-w-[90px] truncate">User</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 mr-1"></i>
+            </button>
+
+            <!-- User Menu Dropdown -->
+            <div id="userDropdownMenu" class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 p-2 z-50">
+              <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                <p id="menuUserEmail" class="text-xs text-slate-400 truncate">user@example.com</p>
+                <span class="inline-block mt-1 text-[10px] uppercase font-extrabold px-2 py-0.5 rounded bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300">Verified User</span>
+              </div>
+              <button onclick="navigate('dashboard'); closeUserDropdown()" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 transition">
+                <i class="fa-solid fa-gauge-high text-brand-600"></i> Owner Dashboard
+              </button>
+              <button onclick="handlePostPgClick(); closeUserDropdown()" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 flex items-center gap-2 transition">
+                <i class="fa-solid fa-bed"></i> Post Hostel / PG
+              </button>
+              <button onclick="navigate('favorites'); closeUserDropdown()" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 transition">
+                <i class="fa-regular fa-heart text-brand-600"></i> Saved Properties & PGs
+              </button>
+              <button onclick="openConfigModal('rules'); closeUserDropdown()" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 transition">
+                <i class="fa-solid fa-shield-halved text-brand-600"></i> Security & Config
+              </button>
+              <button onclick="handleSignOut(); closeUserDropdown()" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2 transition border-t border-slate-100 dark:border-slate-800 mt-1">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MAIN CONTENT CONTAINER
+       ========================================================================= -->
+  <main id="mainContainer" class="flex-1 pb-20 md:pb-12">
+
+    <!-- VIEW: HOME PAGE -->
+    <section id="view-home" class="page-view space-y-12">
+      
+      <!-- HERO SECTION -->
+      <div class="relative overflow-hidden pt-8 pb-12 sm:pt-14 sm:pb-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-700 dark:text-brand-300 text-xs font-bold mb-4">
+            <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+            Direct Owner Listings Across India • No Middlemen
+          </div>
+          <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight sm:leading-none mb-4">
+            Find a place. <br class="sm:hidden" />
+            <span class="bg-gradient-to-r from-brand-600 via-teal-500 to-emerald-600 bg-clip-text text-transparent">
+              Make it yours.
+            </span>
+          </h1>
+          <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8 font-medium">
+            Rent, buy or lease verified apartments, independent houses, villas, and live-vacancy hostels & PGs across India.
+          </p>
+
+          <!-- HERO SEARCH BOX -->
+          <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 sm:p-4 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-200/80 dark:border-slate-800 max-w-3xl mx-auto text-left">
+            <!-- Transaction Selector Tabs -->
+            <div class="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit mb-3">
+              <button onclick="setHeroTab('rent')" id="heroTabRent" class="px-4 py-1.5 rounded-xl text-xs font-extrabold transition bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-300 shadow-2xs">
+                Rent
+              </button>
+              <button onclick="setHeroTab('sale')" id="heroTabSale" class="px-4 py-1.5 rounded-xl text-xs font-extrabold transition text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                Buy
+              </button>
+              <button onclick="setHeroTab('lease')" id="heroTabLease" class="px-4 py-1.5 rounded-xl text-xs font-extrabold transition text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                Commercial
+              </button>
+              <button onclick="navigate('hostels')" class="px-4 py-1.5 rounded-xl text-xs font-extrabold transition text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950 flex items-center gap-1">
+                <i class="fa-solid fa-bed text-[11px]"></i> Hostels & PG
+              </button>
+            </div>
+
+            <!-- Search Inputs Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 items-center">
+              
+              <!-- Location Input -->
+              <div class="sm:col-span-6 relative">
+                <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  Location or Area
+                </label>
+                <div class="relative flex items-center">
+                  <i class="fa-solid fa-location-dot absolute left-3.5 text-brand-600 text-sm"></i>
+                  <input 
+                    type="text" 
+                    id="heroLocationInput" 
+                    placeholder="E.g. Kukatpally, Madhapur, Bellandur, Andheri..." 
+                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:outline-hidden focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 placeholder:text-slate-400"
+                    oninput="handleSearchInputChange()"
+                  />
+                </div>
+              </div>
+
+              <!-- Property Type Dropdown -->
+              <div class="sm:col-span-3">
+                <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  Property Type
+                </label>
+                <select 
+                  id="heroPropertyType" 
+                  class="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:outline-hidden focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100"
+                  onchange="executeSearch()"
+                >
+                  <option value="all">All Types</option>
+                  <option value="apartment">Apartment / Flat</option>
+                  <option value="house">Independent House</option>
+                  <option value="villa">Villa / Gated</option>
+                  <option value="studio">Studio / 1 RK</option>
+                  <option value="commercial">Commercial / Office</option>
+                </select>
+              </div>
+
+              <!-- Search Button -->
+              <div class="sm:col-span-3 sm:pt-5">
+                <button 
+                  onclick="executeSearch()" 
+                  class="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 active:scale-98 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-brand-600/25 transition flex items-center justify-center gap-2"
+                >
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <span>Search</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Proximity Radius Filters -->
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <span class="text-slate-400 font-medium">Radius:</span>
+              <button onclick="setProximityRadius(1)" class="proximity-btn px-2.5 py-1 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-radius="1">1 km</button>
+              <button onclick="setProximityRadius(2)" class="proximity-btn px-2.5 py-1 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-radius="2">2 km</button>
+              <button onclick="setProximityRadius(5)" class="proximity-btn active-radius px-2.5 py-1 rounded-xl text-[11px] font-bold border border-brand-500 bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 transition" data-radius="5">5 km (Priority)</button>
+              <button onclick="setProximityRadius(10)" class="proximity-btn px-2.5 py-1 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-radius="10">10 km</button>
+              <button onclick="setProximityRadius(25)" class="proximity-btn px-2.5 py-1 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-radius="25">25 km</button>
+              <button onclick="setProximityRadius('all')" class="proximity-btn px-2.5 py-1 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-radius="all">All Locations</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPLORER SECTION: LISTINGS & MAP -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Controls Bar -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 id="listingsSectionHeading" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <span>Verified Properties</span>
+              <span id="resultsCountBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">5 listings</span>
+            </h2>
+            <p id="listingsSectionSub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Filtered for direct contact with owners in India
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5 self-stretch sm:self-auto">
+            <!-- View Mode Switch: List vs Map -->
+            <div class="flex items-center p-1 bg-slate-200/70 dark:bg-slate-800 rounded-2xl">
+              <button onclick="setViewMode('list')" id="viewModeListBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-300 shadow-2xs flex items-center gap-1.5">
+                <i class="fa-solid fa-list-ul"></i> List
+              </button>
+              <button onclick="setViewMode('map')" id="viewModeMapBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-map-location-dot"></i> Map
+              </button>
+            </div>
+
+            <!-- Sort By Selector -->
+            <select id="sortSelector" onchange="executeSearch()" class="py-2 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold focus:outline-hidden text-slate-700 dark:text-slate-200">
+              <option value="newest">Newest First</option>
+              <option value="nearest">Nearest to Me</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
+
+            <!-- BHK Filter Chips -->
+            <div class="hidden lg:flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <button onclick="toggleBhkFilter('1')" class="bhk-chip px-2.5 py-1 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-bhk="1">1 BHK</button>
+              <button onclick="toggleBhkFilter('2')" class="bhk-chip px-2.5 py-1 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-bhk="2">2 BHK</button>
+              <button onclick="toggleBhkFilter('3')" class="bhk-chip px-2.5 py-1 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-bhk="3">3 BHK</button>
+              <button onclick="toggleBhkFilter('4+')" class="bhk-chip px-2.5 py-1 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition" data-bhk="4+">4+ BHK</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIST VIEW CONTAINER -->
+        <div id="listViewContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <!-- Property Cards dynamically injected here -->
+        </div>
+
+        <!-- MAP VIEW CONTAINER -->
+        <div id="mapViewContainer" class="hidden rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-slate-900 relative">
+          <div id="leafletMap" class="w-full h-[600px] z-10"></div>
+          <div class="absolute bottom-4 left-4 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-2xl text-xs font-bold shadow-md border border-slate-200 dark:border-slate-800 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+            <span>Click any pin to inspect property price & details</span>
+          </div>
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div id="noResultsState" class="hidden py-16 text-center">
+          <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+            <i class="fa-solid fa-house-circle-xmark"></i>
+          </div>
+          <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">No properties found in this radius</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+            Try expanding your search to 10 km, 25 km, or "All Locations" to see listings across India.
+          </p>
+          <button onclick="setProximityRadius('all')" class="mt-4 px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-brand-700 transition">
+            Show All India Properties
+          </button>
+        </div>
+
+      </div>
+
+      <!-- HOW RENTALEASY WORKS -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div class="bg-white/80 dark:bg-slate-900/80 rounded-3xl p-6 sm:p-10 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div class="text-center max-w-xl mx-auto mb-8">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-brand-600 dark:text-brand-400">Zero Middlemen</span>
+            <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">How RentalEasy Works</h3>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Direct owner-to-tenant transactions built for simplicity & speed.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <div class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-950 text-brand-600 flex items-center justify-center font-black text-sm mb-3">1</div>
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white">Smart Search</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Explore verified homes & PGs near your coordinates or selected college/office.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <div class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-950 text-brand-600 flex items-center justify-center font-black text-sm mb-3">2</div>
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white">Check Vacancy</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Check verified room sharing and live bed availability updated by genuine landlords.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <div class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-950 text-brand-600 flex items-center justify-center font-black text-sm mb-3">3</div>
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white">Direct Connect</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Call or WhatsApp genuine owners instantly with pre-formatted inquiry messages.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <div class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-950 text-brand-600 flex items-center justify-center font-black text-sm mb-3">4</div>
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white">Move In Seamlessly</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Close your deal directly with the landlord. No brokerage fees, ever.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- =========================================================================
+         VIEW: HOSTELS & PG SEARCH PAGE (/hostels-pg)
+         ========================================================================= -->
+    <section id="view-hostels" class="page-view hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      
+      <!-- Top Title & Quick Action Header -->
+      <div class="bg-gradient-to-r from-blue-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold mb-2">
+            <i class="fa-solid fa-shield-halved"></i> Verified Real-Time Vacancies
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black">Hostels & PGs Near You</h1>
+          <p class="text-xs sm:text-sm text-blue-200 mt-1">
+            Search verified boys, girls & co-ed PGs near your college, office, or Metro station with live bed availability.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button onclick="openSmartRecommendationModal()" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Find My Best PG</span>
+          </button>
+          <button onclick="handlePostPgClick()" class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs backdrop-blur-xs transition flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i>
+            <span>Post My PG</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- College / Office Search Bar -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-3 items-center">
+        <div class="relative flex-1 w-full">
+          <i class="fa-solid fa-graduation-cap absolute left-3.5 top-3.5 text-blue-600 text-sm"></i>
+          <input 
+            type="text" 
+            id="pgCollegeSearchInput" 
+            placeholder="Search near college or workplace (e.g. JNTU, Hitech City, DLF CyberCity, Bellandur)..." 
+            class="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+            oninput="handlePgSearchInputChange()"
+          />
+        </div>
+
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <button onclick="executePgSearch()" class="flex-1 md:flex-initial px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Search</span>
+          </button>
+          <button onclick="saveCurrentWorkplaceLocation()" class="px-3 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold transition flex items-center gap-1.5" title="Save this College / Workplace to 1-click search anytime">
+            <i class="fa-regular fa-bookmark"></i>
+            <span class="hidden sm:inline">Save Location</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Saved College/Office Quick Chips -->
+      <div id="savedLocationChipsBar" class="flex flex-wrap items-center gap-2 text-xs">
+        <span class="text-slate-400 font-medium">Popular destinations:</span>
+        <button onclick="filterPgByTarget('JNTU Hyderabad')" class="px-3 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold hover:border-blue-500 transition">
+          🎓 JNTU Hyderabad
+        </button>
+        <button onclick="filterPgByTarget('Hitech City')" class="px-3 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold hover:border-blue-500 transition">
+          🏢 HITEC City
+        </button>
+        <button onclick="filterPgByTarget('Bellandur')" class="px-3 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold hover:border-blue-500 transition">
+          🏢 Bellandur Tech Park
+        </button>
+        <button onclick="filterPgByTarget('Kukatpally')" class="px-3 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold hover:border-blue-500 transition">
+          📍 Kukatpally Metro
+        </button>
+      </div>
+
+      <!-- Search Controls / Active View Toggle -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+        <div class="flex items-center gap-3">
+          <h2 class="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <span>PG & Hostel Results</span>
+            <span id="pgCountBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">0 found</span>
+          </h2>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- View Toggle: List vs Map -->
+          <div class="flex items-center p-1 bg-slate-200/70 dark:bg-slate-800 rounded-2xl">
+            <button onclick="setPgViewMode('list')" id="pgViewModeListBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs flex items-center gap-1.5">
+              <i class="fa-solid fa-list-ul"></i> List
+            </button>
+            <button onclick="setPgViewMode('map')" id="pgViewModeMapBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-map-location-dot"></i> Map
+            </button>
+          </div>
+
+          <!-- Sort Selector -->
+          <select id="pgSortSelector" onchange="executePgSearch()" class="py-2 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200">
+            <option value="recommended">Recommended (Best Match)</option>
+            <option value="price_asc">Lowest Price First</option>
+            <option value="price_desc">Highest Price First</option>
+            <option value="nearest">Nearest to Me</option>
+            <option value="vacancies">Most Available Beds</option>
+            <option value="newest">Newest First</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- MAIN DESKTOP GRID: FILTERS SIDEBAR + RESULTS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- SIDEBAR FILTERS (4 Cols) -->
+        <aside class="lg:col-span-4 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-blue-600"></i> Filters
+            </h3>
+            <button onclick="resetPgFilters()" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+              Reset All
+            </button>
+          </div>
+
+          <!-- Gender Filter -->
+          <div>
+            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Gender *</label>
+            <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl text-center">
+              <button onclick="setPgGenderFilter('all')" id="pgGenderAll" class="py-1.5 rounded-xl text-xs font-extrabold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs">All</button>
+              <button onclick="setPgGenderFilter('boys')" id="pgGenderBoys" class="py-1.5 rounded-xl text-xs font-extrabold transition text-slate-600 dark:text-slate-400">Boys</button>
+              <button onclick="setPgGenderFilter('girls')" id="pgGenderGirls" class="py-1.5 rounded-xl text-xs font-extrabold transition text-slate-600 dark:text-slate-400">Girls</button>
+              <button onclick="setPgGenderFilter('co-ed')" id="pgGenderCoed" class="py-1.5 rounded-xl text-xs font-extrabold transition text-slate-600 dark:text-slate-400">Co-ed</button>
+            </div>
+          </div>
+
+          <!-- Sharing Type Filter -->
+          <div>
+            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Room Sharing</label>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="togglePgSharingFilter('single')" class="pg-share-chip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300" data-share="single">Single</button>
+              <button onclick="togglePgSharingFilter('double')" class="pg-share-chip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300" data-share="double">Double</button>
+              <button onclick="togglePgSharingFilter('triple')" class="pg-share-chip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300" data-share="triple">Triple</button>
+              <button onclick="togglePgSharingFilter('four')" class="pg-share-chip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300" data-share="four">4+ Sharing</button>
+            </div>
+          </div>
+
+          <!-- Monthly Budget Slider -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Max Budget</label>
+              <span id="pgBudgetValLabel" class="text-xs font-black text-blue-600 dark:text-blue-400">₹15,000</span>
+            </div>
+            <input 
+              type="range" 
+              id="pgBudgetRange" 
+              min="3000" 
+              max="25000" 
+              step="500" 
+              value="15000" 
+              class="w-full accent-blue-600 cursor-pointer"
+              oninput="handlePgBudgetChange(this.value)"
+            />
+            <div class="flex justify-between text-[10px] text-slate-400 font-bold mt-1">
+              <span>₹3,000</span>
+              <span>₹10,000</span>
+              <span>₹25,000+</span>
+            </div>
+          </div>
+
+          <!-- Vacancy Availability -->
+          <div>
+            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Availability Status</label>
+            <select id="pgAvailabilityFilter" onchange="executePgSearch()" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+              <option value="any">Any (Include Full)</option>
+              <option value="available" selected>Available Now (Active Beds Only)</option>
+              <option value="this_week">Available This Week</option>
+            </select>
+          </div>
+
+          <!-- Food Availability -->
+          <div>
+            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Food / Mess</label>
+            <div class="space-y-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="pgFilterFoodRequired" onchange="executePgSearch()" class="rounded-sm accent-blue-600" />
+                <span>3 Times Food Included</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="pgFilterAcRequired" onchange="executePgSearch()" class="rounded-sm accent-blue-600" />
+                <span>AC Rooms Only</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Essential Amenities -->
+          <div>
+            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Amenities</label>
+            <div class="grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+              <label class="flex items-center gap-1.5"><input type="checkbox" class="pg-amenity-cb" value="wifi" onchange="executePgSearch()" /> Wi-Fi</label>
+              <label class="flex items-center gap-1.5"><input type="checkbox" class="pg-amenity-cb" value="attached_bath" onchange="executePgSearch()" /> Attached Bath</label>
+              <label class="flex items-center gap-1.5"><input type="checkbox" class="pg-amenity-cb" value="washing_machine" onchange="executePgSearch()" /> Washing Machine</label>
+              <label class="flex items-center gap-1.5"><input type="checkbox" class="pg-amenity-cb" value="power_backup" onchange="executePgSearch()" /> Power Backup</label>
+              <label class="flex items-center gap-1.5"><input type="checkbox" class="pg-amenity-cb" value="cctv" onchange="executePgSearch()" /> CCTV Security</label>
+              <label class="flex items-center gap-1.5"><input type="checkbox" class="pg-amenity-cb" value="geyser" onchange="executePgSearch()" /> Geyser / Hot Water</label>
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- RESULTS CONTAINER (8 Cols) -->
+        <div class="lg:col-span-8 space-y-4">
+          
+          <!-- Source Legend Banner -->
+          <div class="p-3 bg-blue-50/70 dark:bg-slate-800/80 rounded-2xl border border-blue-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-4">
+              <span class="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 font-bold">
+                <i class="fa-solid fa-circle-check text-blue-600"></i> RentalEasy Verified Listings
+              </span>
+              <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium">
+                <i class="fa-solid fa-map-pin text-slate-400"></i> OpenStreetMap Discovered Places
+              </span>
+            </div>
+            <span class="text-[11px] text-slate-400">Zero fake vacancies guaranteed</span>
+          </div>
+
+          <!-- LIST VIEW -->
+          <div id="pgListResultsContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <!-- Dynamically populated via renderPgCards() -->
+          </div>
+
+          <!-- MAP VIEW -->
+          <div id="pgMapContainer" class="hidden rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-slate-900 relative">
+            <div id="pgLeafletMap" class="w-full h-[550px] z-10"></div>
+            <div class="absolute bottom-4 left-4 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3.5 py-2 rounded-2xl text-xs font-bold shadow-md border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+              <span class="flex items-center gap-1 text-blue-600"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span> Verified PG</span>
+              <span class="flex items-center gap-1 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block"></span> Map Place</span>
+            </div>
+          </div>
+
+          <!-- EMPTY STATE FOR PGS -->
+          <div id="pgNoResultsState" class="hidden py-16 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
+            <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-500 flex items-center justify-center mx-auto mb-3 text-2xl">
+              <i class="fa-solid fa-bed"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">No available PGs found nearby</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+              Try increasing your radius, selecting different sharing options, or clearing food/AC requirements.
+            </p>
+            <div class="flex items-center justify-center gap-2 mt-4">
+              <button onclick="expandPgSearchRadius()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-blue-700 transition">
+                Expand to 10 km
+              </button>
+              <button onclick="resetPgFilters()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                Reset Filters
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW: HOSTEL / PG DETAILS PAGE
+         ========================================================================= -->
+    <section id="view-hostel-details" class="page-view hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex items-center justify-between mb-4">
+        <button onclick="navigate('hostels')" class="px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 flex items-center gap-1.5 transition shadow-2xs">
+          <i class="fa-solid fa-arrow-left"></i> Back to Hostels & PGs
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="toggleFavoriteCurrentPg()" id="detailPgFavBtn" class="p-2 w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-red-500 flex items-center justify-center transition shadow-2xs">
+            <i id="detailPgFavIcon" class="fa-regular fa-heart text-sm"></i>
+          </button>
+          <button onclick="openReportModal()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 text-xs font-bold hover:text-red-600 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-flag"></i> Report
+          </button>
+        </div>
+      </div>
+
+      <div id="hostelDetailContent" class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <!-- Injected dynamically via renderHostelDetailsView() -->
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW: POST PG / HOSTEL VIEW (OWNER FORM)
+         ========================================================================= -->
+    <section id="view-post-pg" class="page-view hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+        
+        <div class="mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-xs font-bold mb-2">
+            <i class="fa-solid fa-bed"></i> Hostel / PG Manager
+          </div>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">List Your Hostel / PG Vacancy</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Publish your student hostel, paying guest, or working professional accommodation for verified tenants with zero commission.
+          </p>
+        </div>
+
+        <form id="postPgForm" onsubmit="handlePgFormSubmit(event)" class="space-y-6">
+          <input type="hidden" id="editPgId" value="" />
+
+          <!-- PG Name & Gender -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Hostel / PG Name *</label>
+              <input type="text" id="formPgName" required placeholder="E.g. Sri Sai Balaji Luxury Boys PG" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Gender / Category *</label>
+              <select id="formPgGender" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100">
+                <option value="boys">Boys Hostel / PG</option>
+                <option value="girls">Girls Hostel / PG</option>
+                <option value="co-ed">Co-ed / Mixed</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Description *</label>
+            <textarea id="formPgDescription" required rows="3" placeholder="Describe the food menu, hygiene, study environment, nearby colleges/metros, gate closing timings..." class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"></textarea>
+          </div>
+
+          <!-- Location Information -->
+          <div class="space-y-4 pt-2">
+            <h3 class="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Location Details</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Locality / Area Name *</label>
+                <input type="text" id="formPgArea" required placeholder="E.g. Kukatpally / Madhapur" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City *</label>
+                <input type="text" id="formPgCity" required placeholder="E.g. Hyderabad" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nearby Landmark / Metro *</label>
+                <input type="text" id="formPgLandmark" required placeholder="E.g. Near JNTU Metro Pillar 42" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100" />
+              </div>
+            </div>
+            <input type="hidden" id="formPgLat" value="17.4930" />
+            <input type="hidden" id="formPgLon" value="78.3910" />
+          </div>
+
+          <!-- Room Sharing Types & Bed Vacancies -->
+          <div class="space-y-4 pt-2">
+            <h3 class="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Room Sharing Types & Vacancy</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <!-- Single Sharing -->
+              <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                <span class="font-extrabold text-xs text-slate-800 dark:text-slate-200 block mb-2">Single Room</span>
+                <input type="number" id="pgPriceSingle" placeholder="Price (₹/mo)" class="w-full p-2 mb-2 bg-white dark:bg-slate-900 border rounded-xl text-xs font-bold" />
+                <input type="number" id="pgBedsSingle" placeholder="Available Beds" class="w-full p-2 bg-white dark:bg-slate-900 border rounded-xl text-xs font-bold" />
+              </div>
+              <!-- Double Sharing -->
+              <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                <span class="font-extrabold text-xs text-slate-800 dark:text-slate-200 block mb-2">Double Sharing *</span>
+                <input type="number" id="pgPriceDouble" required placeholder="Price (₹/mo)" class="w-full p-2 mb-2 bg-white dark:bg-slate-900 border rounded-xl text-xs font-bold" />
+                <input type="number" id="pgBedsDouble" required placeholder="Available Beds" class="w-full p-2 bg-white dark:bg-slate-900 border rounded-xl text-xs font-bold" />
+              </div>
+              <!-- Triple Sharing -->
+              <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                <span class="font-extrabold text-xs text-slate-800 dark:text-slate-200 block mb-2">Triple Sharing</span>
+                <input type="number" id="pgPriceTriple" placeholder="Price (₹/mo)" class="w-full p-2 mb-2 bg-white dark:bg-slate-900 border rounded-xl text-xs font-bold" />
+                <input type="number" id="pgBedsTriple" placeholder="Available Beds" class="w-full p-2 bg-white dark:bg-slate-900 border rounded-xl text-xs font-bold" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Food and Mess Inclusions -->
+          <div class="space-y-2 pt-2">
+            <h3 class="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Food & Mess Facilities</h3>
+            <div class="flex flex-wrap gap-4 text-xs font-semibold">
+              <label class="flex items-center gap-2"><input type="checkbox" id="formPgFoodAvailable" checked class="accent-blue-600" /> 3 Meals Provided (Breakfast, Lunch, Dinner)</label>
+              <label class="flex items-center gap-2"><input type="checkbox" id="formPgNonVeg" checked class="accent-blue-600" /> Non-Veg on Weekends</label>
+              <label class="flex items-center gap-2"><input type="checkbox" id="formPgSelfCook" class="accent-blue-600" /> Self-Cooking Allowed</label>
+            </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="space-y-4 pt-2">
+            <h3 class="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Owner Contact</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Manager / Owner Name *</label>
+                <input type="text" id="formPgOwnerName" required placeholder="Full Name" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number *</label>
+                <input type="tel" id="formPgPhone" required pattern="[0-9]{10}" placeholder="10-digit mobile" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">WhatsApp Number *</label>
+                <input type="tel" id="formPgWhatsapp" required pattern="[0-9]{10}" placeholder="WhatsApp number" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Photos Notice -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Hostel Photos</label>
+            <p class="text-xs text-slate-400 mb-2">Upload room, bathroom & dining hall photos.</p>
+            <label class="cursor-pointer px-4 py-2.5 rounded-xl border border-dashed border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 text-xs font-bold inline-flex items-center gap-2 hover:bg-blue-100 transition">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Photos
+              <input type="file" id="formPgFileInput" accept="image/*" multiple onchange="handleImageSelection(this)" class="hidden">
+            </label>
+            <div id="imagePreviewContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3"></div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+            <button type="button" onclick="navigate('hostels')" class="px-5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">
+              Cancel
+            </button>
+            <button type="submit" id="submitPgBtn" class="px-7 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm shadow-md shadow-blue-600/30 transition flex items-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>Publish PG Vacancy</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW: PROPERTY DETAILS PAGE -->
+    <section id="view-property-details" class="page-view hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex items-center justify-between mb-4">
+        <button onclick="navigate('home')" class="px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-brand-600 flex items-center gap-1.5 transition shadow-2xs">
+          <i class="fa-solid fa-arrow-left"></i> Back to Properties
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="toggleFavoriteCurrent()" id="detailFavBtn" class="p-2 w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-red-500 flex items-center justify-center transition shadow-2xs">
+            <i id="detailFavIcon" class="fa-regular fa-heart text-sm"></i>
+          </button>
+          <button onclick="openReportModal()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 text-xs font-bold hover:text-red-600 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-flag"></i> Report
+          </button>
+        </div>
+      </div>
+
+      <div id="propertyDetailContent" class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <!-- Injected dynamically via renderPropertyDetailsView() -->
+      </div>
+    </section>
+
+    <!-- VIEW: POST / EDIT PROPERTY FORM -->
+    <section id="view-post-property" class="page-view hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+        
+        <div class="mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <h2 id="postFormTitle" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Post Your Property</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">List your home, flat or commercial space for verified tenants across India. Free of charge.</p>
+        </div>
+
+        <form id="propertyPostForm" onsubmit="handlePropertySubmit(event)" class="space-y-6">
+          <input type="hidden" id="editPropertyId" value="" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Listing Intent *</label>
+              <select id="formListingType" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+                <option value="rent">Rent (Monthly)</option>
+                <option value="sale">Outright Sale</option>
+                <option value="lease">Commercial Lease</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Property Type *</label>
+              <select id="formPropertyType" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+                <option value="apartment">Apartment / Gated Flat</option>
+                <option value="house">Independent House / Builder Floor</option>
+                <option value="villa">Luxury Villa / Bungalow</option>
+                <option value="studio">Studio Apartment / 1 RK</option>
+                <option value="commercial">Commercial Office / Retail Space</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Property Title *</label>
+            <input type="text" id="formTitle" required placeholder="E.g. 2 BHK Semi Furnished Luxury Flat with Balcony in Kukatpally" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Description *</label>
+            <textarea id="formDescription" required rows="3" placeholder="Describe layout, ventilation, vastu compliance, nearby metro, water availability..." class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Price / Rent (₹) *</label>
+              <input type="number" id="formPrice" required min="1000" placeholder="E.g. 24000" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-bold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Security Deposit (₹)</label>
+              <input type="number" id="formSecurityDeposit" placeholder="E.g. 50000" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Monthly Maintenance (₹)</label>
+              <input type="number" id="formMaintenance" placeholder="E.g. 2500" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Bedrooms (BHK)</label>
+              <select id="formBedrooms" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+                <option value="1">1 BHK</option>
+                <option value="2" selected>2 BHK</option>
+                <option value="3">3 BHK</option>
+                <option value="4">4 BHK</option>
+                <option value="5">5+ BHK</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Bathrooms</label>
+              <select id="formBathrooms" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4+</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Furnishing</label>
+              <select id="formFurnishing" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+                <option value="semi-furnished" selected>Semi Furnished</option>
+                <option value="fully-furnished">Fully Furnished</option>
+                <option value="unfurnished">Unfurnished</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Built-up Area</label>
+              <input type="number" id="formArea" placeholder="Sq.ft (1200)" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+            </div>
+          </div>
+
+          <div class="space-y-4 pt-2">
+            <h3 class="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400">Location</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Locality / Area Name *</label>
+                <input type="text" id="formAreaName" required placeholder="E.g. Kukatpally / Madhapur" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City *</label>
+                <input type="text" id="formCity" required placeholder="E.g. Hyderabad" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Landmark</label>
+                <input type="text" id="formLandmark" placeholder="Near Forum Sujana Mall" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+              </div>
+            </div>
+            <input type="hidden" id="formLat" value="17.4851" />
+            <input type="hidden" id="formLon" value="78.3992" />
+          </div>
+
+          <div class="space-y-4 pt-2">
+            <h3 class="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400">Direct Owner Contact</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Contact Person *</label>
+                <input type="text" id="formOwnerName" required placeholder="Owner Full Name" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number *</label>
+                <input type="tel" id="formPhone" required pattern="[0-9]{10}" placeholder="10-digit mobile" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">WhatsApp Number *</label>
+                <input type="tel" id="formWhatsapp" required pattern="[0-9]{10}" placeholder="WhatsApp number" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" />
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+            <button type="button" onclick="navigate('home')" class="px-5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">
+              Cancel
+            </button>
+            <button type="submit" id="submitPropertyBtn" class="px-7 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs sm:text-sm shadow-md shadow-brand-600/30 transition flex items-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span id="submitBtnText">Publish Listing Now</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW: OWNER DASHBOARD WITH HOSTELS & PGS TAB -->
+    <section id="view-dashboard" class="page-view hidden max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900 dark:text-white">Owner Listing Manager</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage both your real estate properties and hostel/PG bed vacancies.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="handlePostPropertyClick()" class="px-3.5 py-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> Post Property
+          </button>
+          <button onclick="handlePostPgClick()" class="px-3.5 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition flex items-center gap-1.5">
+            <i class="fa-solid fa-bed"></i> Post PG / Hostel
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistics Row -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <span class="text-xs font-bold text-slate-400">Total Listings</span>
+          <div id="statTotalListed" class="text-2xl font-black text-slate-900 dark:text-white mt-1">0</div>
+        </div>
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <span class="text-xs font-bold text-emerald-600">Active Listings</span>
+          <div id="statActiveListed" class="text-2xl font-black text-slate-900 dark:text-white mt-1">0</div>
+        </div>
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <span class="text-xs font-bold text-blue-600">PG Vacant Beds</span>
+          <div id="statPgAvailableBeds" class="text-2xl font-black text-slate-900 dark:text-white mt-1">0</div>
+        </div>
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <span class="text-xs font-bold text-brand-600">Direct Inquiries</span>
+          <div id="statContactsCount" class="text-2xl font-black text-slate-900 dark:text-white mt-1">0</div>
+        </div>
+      </div>
+
+      <!-- Owner PG Section with Live Vacancy Quick Updates -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+        <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-bed text-blue-600"></i> My PGs & Hostels (Live Bed Vacancy Manager)
+          </h3>
+        </div>
+        <div id="ownerPgList" class="p-4 space-y-3">
+          <!-- Dynamically populated via renderOwnerDashboard() -->
+        </div>
+      </div>
+
+      <!-- Real Estate Properties Section -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+        <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+          <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-house text-brand-600"></i> My Real Estate Properties
+          </h3>
+        </div>
+        <div id="ownerPropertiesList" class="p-4 space-y-3">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: SAVED FAVORITES -->
+    <section id="view-favorites" class="page-view hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div>
+        <h2 class="text-2xl font-black text-slate-900 dark:text-white">Saved Properties & Hostels</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Shortlisted properties and verified PGs for quick comparison and owner follow-up.</p>
+      </div>
+
+      <div id="favoritesListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Injected via renderFavoritesView() -->
+      </div>
+
+      <div id="favoritesEmptyState" class="hidden py-16 text-center">
+        <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+          <i class="fa-regular fa-heart"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">No properties or hostels saved yet</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+          Tap the heart icon on any property or PG card to save it for easy access later.
+        </p>
+        <button onclick="navigate('home')" class="mt-4 px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-xs transition">
+          Browse Properties
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       FOOTER
+       ========================================================================= -->
+  <footer class="bg-white/80 dark:bg-slate-900/80 border-t border-slate-200/80 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+            <i class="fa-solid fa-house"></i>
+          </div>
+          <span class="font-extrabold text-slate-800 dark:text-white tracking-tight">RentalEasy</span>
+          <span class="text-slate-400">| Find a place. Make it yours.</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 text-[11px] font-semibold">
+          <a href="#" onclick="openConfigModal('rules'); return false;" class="hover:text-brand-600 transition">Firestore Rules</a>
+          <a href="#" onclick="openConfigModal('storageRules'); return false;" class="hover:text-brand-600 transition">Storage Rules</a>
+          <a href="#" onclick="openConfigModal('indexes'); return false;" class="hover:text-brand-600 transition">Composite Indexes</a>
+          <a href="#" onclick="openConfigModal('deployment'); return false;" class="hover:text-brand-600 transition">Deployment Guide</a>
+        </div>
+        <div class="text-[11px] text-slate-400">
+          &copy; 2026 RentalEasy Marketplace. Built for Indian Real Estate & Hostels.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE STICKY BOTTOM NAVIGATION -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 flex items-center justify-around text-slate-600 dark:text-slate-400">
+    <button onclick="navigate('home')" id="mobNavHome" class="flex flex-col items-center gap-1 p-2 rounded-xl text-brand-600 dark:text-brand-400">
+      <i class="fa-solid fa-house text-base"></i>
+      <span class="text-[10px] font-extrabold">Home</span>
+    </button>
+    <button onclick="navigate('hostels')" id="mobNavPg" class="flex flex-col items-center gap-1 p-2 rounded-xl text-blue-600">
+      <i class="fa-solid fa-bed text-base"></i>
+      <span class="text-[10px] font-bold">PG/Hostel</span>
+    </button>
+    <button onclick="handlePostPropertyClick()" class="flex flex-col items-center gap-1 p-2 rounded-xl text-brand-600">
+      <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center -mt-3 shadow-md shadow-brand-600/30">
+        <i class="fa-solid fa-plus text-xs"></i>
+      </div>
+      <span class="text-[10px] font-bold">Post</span>
+    </button>
+    <button onclick="navigate('favorites')" id="mobNavSaved" class="flex flex-col items-center gap-1 p-2 rounded-xl">
+      <i class="fa-regular fa-heart text-base"></i>
+      <span class="text-[10px] font-bold">Saved</span>
+    </button>
+    <button onclick="handleUserMobNavClick()" id="mobNavAccount" class="flex flex-col items-center gap-1 p-2 rounded-xl">
+      <i class="fa-regular fa-user text-base"></i>
+      <span class="text-[10px] font-bold">Account</span>
+    </button>
+  </nav>
+
+  <!-- =========================================================================
+       MODALS: SMART PG WIZARD, VACANCY UPDATE, AUTH, REPORT, AND CONFIG
+       ========================================================================= -->
+
+  <!-- SMART "FIND MY BEST PG" RECOMMENDATION MODAL -->
+  <div id="smartPgModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 relative">
+      <button onclick="closeModal('smartPgModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-3 text-xl">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+      </div>
+      <h3 class="text-lg font-black text-center text-slate-900 dark:text-white">Find My Best PG</h3>
+      <p class="text-xs text-center text-slate-500 dark:text-slate-400 mt-1 mb-5">Answer 3 quick questions to discover your ideal hostel or PG.</p>
+
+      <form onsubmit="applySmartPgRecommendations(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">1. Who are you looking for?</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center cursor-pointer text-xs font-bold has-checked:border-blue-600 has-checked:bg-blue-50 dark:has-checked:bg-blue-950">
+              <input type="radio" name="smartGender" value="boys" checked class="hidden" /> Boys PG
+            </label>
+            <label class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center cursor-pointer text-xs font-bold has-checked:border-blue-600 has-checked:bg-blue-50 dark:has-checked:bg-blue-950">
+              <input type="radio" name="smartGender" value="girls" class="hidden" /> Girls PG
+            </label>
+            <label class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center cursor-pointer text-xs font-bold has-checked:border-blue-600 has-checked:bg-blue-50 dark:has-checked:bg-blue-950">
+              <input type="radio" name="smartGender" value="co-ed" class="hidden" /> Co-ed
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">2. Monthly Budget Range</label>
+          <select id="smartBudgetSelect" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+            <option value="7000">Affordable (Under ₹7,000)</option>
+            <option value="9000" selected>Balanced (₹7,000 - ₹9,000)</option>
+            <option value="13000">Comfort (₹9,000 - ₹13,000)</option>
+            <option value="20000">Luxury / Private (₹13,000+)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">3. What matters most to you?</label>
+          <div class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 font-semibold">
+            <label class="flex items-center gap-2"><input type="checkbox" id="smartNeedFood" checked class="accent-blue-600" /> Must have 3 meals food included</label>
+            <label class="flex items-center gap-2"><input type="checkbox" id="smartNeedAc" class="accent-blue-600" /> Must have AC Room</label>
+            <label class="flex items-center gap-2"><input type="checkbox" id="smartNeedNearCollege" class="accent-blue-600" /> Nearest to college / workplace</label>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xs shadow-md transition">
+          Show Recommended PGs
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- VACANCY QUICK UPDATE MODAL (FOR PG OWNERS) -->
+  <div id="vacancyModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 relative">
+      <button onclick="closeModal('vacancyModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+      <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mx-auto mb-3 text-xl">
+        <i class="fa-solid fa-bed"></i>
+      </div>
+      <h3 id="vacancyModalPgName" class="text-base font-black text-center text-slate-900 dark:text-white">Update Bed Vacancy</h3>
+      <p class="text-xs text-center text-slate-500 dark:text-slate-400 mt-1 mb-5">Keep your available beds accurate to receive genuine tenant inquiries.</p>
+
+      <form onsubmit="handleVacancyUpdateSubmit(event)" class="space-y-3">
+        <input type="hidden" id="vacancyTargetPgId" value="" />
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Available Beds Right Now *</label>
+          <input type="number" id="vacancyAvailableBedsInput" required min="0" max="200" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Total Capacity (Beds)</label>
+          <input type="number" id="vacancyTotalBedsInput" min="1" max="500" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold" />
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition">
+          Save Live Vacancy
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Google Auth Modal -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-center relative">
+      <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 flex items-center justify-center mx-auto mb-3 text-xl">
+        <i class="fa-solid fa-shield-cat"></i>
+      </div>
+      <h3 class="text-lg font-black text-slate-900 dark:text-white">Sign In to RentalEasy</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-6">
+        Save favorite listings, publish free properties & PGs, and contact owners across India.
+      </p>
+
+      <div class="space-y-3">
+        <button onclick="handleGoogleSignIn()" class="w-full py-3 px-4 rounded-2xl border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold flex items-center justify-center gap-3 transition shadow-2xs text-slate-700 dark:text-slate-200">
+          <i class="fa-brands fa-google text-brand-600 text-base"></i>
+          <span>Continue with Google</span>
+        </button>
+
+        <button onclick="simulateDemoSignIn()" class="w-full py-2.5 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-bold transition">
+          Quick Demo Login (Landlord / Tenant)
+        </button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-4">By continuing you agree to RentalEasy's Terms of Service and Privacy Policy.</p>
+    </div>
+  </div>
+
+  <!-- Custom In-App Confirmation Modal -->
+  <div id="confirmModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-center relative">
+      <div id="confirmIconBox" class="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/40 text-red-600 flex items-center justify-center mx-auto mb-3 text-xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 id="confirmModalTitle" class="text-base font-black text-slate-900 dark:text-white">Confirm Action</h3>
+      <p id="confirmModalMessage" class="text-xs text-slate-500 dark:text-slate-400 mt-2 mb-6">Are you sure you want to proceed?</p>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <button id="confirmCancelBtn" type="button" class="py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition">
+          Cancel
+        </button>
+        <button id="confirmOkBtn" type="button" class="py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md transition">
+          Proceed
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Property/Hostel Modal -->
+  <div id="reportModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 relative">
+      <button onclick="closeModal('reportModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+      <h3 class="text-base font-black text-slate-900 dark:text-white mb-2">Report Listing</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Help us keep RentalEasy genuine and scam-free.</p>
+
+      <form onsubmit="submitPropertyReport(event)" class="space-y-3">
+        <select id="reportReason" required class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold">
+          <option value="fake_property">Fake / Non-existent property or PG</option>
+          <option value="incorrect_price">Incorrect price or brokerage demanded</option>
+          <option value="no_vacancy">No beds available (claimed vacant)</option>
+          <option value="inappropriate_images">Misleading or inappropriate photos</option>
+          <option value="other">Other issue</option>
+        </select>
+        <textarea id="reportNotes" rows="2" placeholder="Additional details..." class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs"></textarea>
+        <button type="submit" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition shadow-2xs">
+          Submit Report
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Developer Config & Security Modal -->
+  <div id="configModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[85vh] flex flex-col relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 id="configModalTitle" class="text-sm font-black text-slate-900 dark:text-white">Security Rules & Architecture</h3>
+        <button onclick="closeModal('configModal')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div id="configModalContent" class="py-4 overflow-y-auto font-mono text-xs text-slate-700 dark:text-slate-300"></div>
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+        <button onclick="copyConfigContent()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold hover:bg-brand-700 transition">
+          Copy Code
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Box -->
+  <div id="toastBox" class="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- =========================================================================
+       FIREBASE MODULAR ARCHITECTURE
+       ========================================================================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { 
+      getAuth, 
+      GoogleAuthProvider, 
+      signInWithPopup, 
+      onAuthStateChanged, 
+      signOut 
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      doc, 
+      getDoc, 
+      getDocs, 
+      setDoc, 
+      updateDoc, 
+      deleteDoc, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJYRmqJJe33XEHOIZcj_gYWQyoArRPxQ",
+      authDomain: "rentals-5096.firebaseapp.com",
+      databaseURL: "https://rentals-5096-default-rtdb.firebaseio.com",
+      projectId: "rentals-5096",
+      storageBucket: "rentals-5096.firebasestorage.app",
+      messagingSenderId: "697970618236",
+      appId: "1:697970618236:web:5ca928629ce0019ac6fef9",
+      measurementId: "G-6QFHRFQCHP"
+    };
+
+    let app = null, auth = null, db = null;
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch (e) {
+      console.warn("Firebase initialized with local fallback:", e);
+    }
+
+    window.fbAuth = auth;
+    window.fbDb = db;
+    window.fbGoogleProvider = new GoogleAuthProvider();
+    window.fbSignInWithPopup = signInWithPopup;
+    window.fbSignOut = signOut;
+    window.fbOnAuthStateChanged = onAuthStateChanged;
+    window.fbDoc = doc;
+    window.fbSetDoc = setDoc;
+    window.fbDeleteDoc = deleteDoc;
+    window.fbServerTimestamp = serverTimestamp;
+
+    if (auth && onAuthStateChanged) {
+      onAuthStateChanged(auth, (user) => {
+        window.handleAuthStateChange(user);
+      });
+    }
+  </script>
+
+  <!-- =========================================================================
+       APPLICATION CORE JAVASCRIPT: REAL ESTATE + HOSTELS & PG VACANCY SYSTEM
+       ========================================================================= -->
+  <script>
+    // Global State
+    let activeView = 'home';
+    let userLocation = null; // { lat: 17.4851, lon: 78.3992 }
+    let propertiesData = [];
+    let hostelsData = [];
+    let savedFavoriteIds = new Set();
+    let currentDetailId = null;
+    let currentDetailPgId = null;
+    let pendingImagesQueue = [];
+    let leafletMapInstance = null;
+    let pgLeafletMapInstance = null;
+    let mapMarkersGroup = null;
+    let pgMapMarkersGroup = null;
+    let activeBhkFilters = new Set();
+    let currentProximityRadius = 5;
+    let activeListingTypeFilter = 'all';
+    let searchDebounceTimer = null;
+    let pgSearchDebounceTimer = null;
+    let confirmCallback = null;
+
+    // PG Filter State
+    let activePgGender = 'all';
+    let activePgSharing = new Set();
+    let activePgMaxBudget = 15000;
+
+    // Authentic Real Estate Seed Data
+    const INITIAL_SEED_PROPERTIES = [
+      {
+        id: "prop-hyd-1",
+        ownerId: "owner-hyd-demo",
+        title: "2 BHK Semi Furnished Luxury Flat with Balcony",
+        description: "East facing, vastu compliant apartment situated in high-rise gated society. 5 minutes from Metro station. Features 24/7 security, gym, clubhouse, power backup, and dedicated covered car parking.",
+        listingType: "rent",
+        propertyType: "apartment",
+        price: 24000,
+        securityDeposit: 60000,
+        maintenance: 2500,
+        bedrooms: 2,
+        bathrooms: 2,
+        furnishing: "semi-furnished",
+        builtUpArea: 1250,
+        area: "Kukatpally",
+        city: "Hyderabad",
+        state: "Telangana",
+        pincode: "500072",
+        landmark: "Near Forum Sujana Mall",
+        latitude: 17.4851,
+        longitude: 78.3992,
+        coverImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80",
+        images: [{ url: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80", order: 0 }],
+        ownerName: "Rajeshwar Rao",
+        contactPhone: "9849012345",
+        whatsappPhone: "9849012345",
+        status: "active",
+        verified: true,
+        createdAt: Date.now() - 3600000 * 2
+      },
+      {
+        id: "prop-blr-2",
+        ownerId: "owner-blr-demo",
+        title: "Spacious 3 BHK Fully Furnished Penthouse Villa",
+        description: "Modern interior designed home with Italian marble, modular kitchen with chimney, private terrace garden, and smart biometric locks. Quiet residential enclave close to tech parks.",
+        listingType: "rent",
+        propertyType: "villa",
+        price: 48000,
+        securityDeposit: 150000,
+        maintenance: 4000,
+        bedrooms: 3,
+        bathrooms: 3,
+        furnishing: "fully-furnished",
+        builtUpArea: 2200,
+        area: "Bellandur",
+        city: "Bengaluru",
+        state: "Karnataka",
+        pincode: "560103",
+        landmark: "Near Ecospace Tech Park",
+        latitude: 12.9260,
+        longitude: 77.6762,
+        coverImage: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+        images: [{ url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80", order: 0 }],
+        ownerName: "Ananya Sharma",
+        contactPhone: "9886098765",
+        whatsappPhone: "9886098765",
+        status: "active",
+        verified: true,
+        createdAt: Date.now() - 3600000 * 5
+      }
+    ];
+
+    // Authentic Hostels & PG Seed Data (RentalEasy Verified + Map Discovered Places)
+    const INITIAL_SEED_HOSTELS = [
+      {
+        id: "pg-hyd-1",
+        ownerId: "owner-hyd-demo",
+        name: "Sri Sai Balaji Luxury Boys PG & Hostel",
+        description: "Brand new building with lift, high-speed Wi-Fi, 3-times North & South Indian food, washing machines, RO water, and daily housekeeping. Walking distance to JNTU Metro and colleges.",
+        listingType: "pg",
+        gender: "boys",
+        area: "Kukatpally",
+        city: "Hyderabad",
+        state: "Telangana",
+        pincode: "500072",
+        landmark: "Behind JNTU Metro Pillar 42",
+        latitude: 17.4938,
+        longitude: 78.3915,
+        price: 7500, // starting price
+        roomTypes: [
+          { type: "single", price: 13000, totalBeds: 6, availableBeds: 1 },
+          { type: "double", price: 8000, totalBeds: 16, availableBeds: 3 },
+          { type: "triple", price: 6500, totalBeds: 18, availableBeds: 2 }
+        ],
+        vacancy: {
+          available: true,
+          totalBeds: 40,
+          availableBeds: 6,
+          lastUpdated: Date.now() - 1000 * 60 * 25 // 25 mins ago
+        },
+        food: { available: true, meals: "Breakfast, Lunch, Dinner", nonVegWeekends: true },
+        amenities: ["wifi", "ac", "attached_bath", "washing_machine", "power_backup", "cctv", "geyser"],
+        coverImage: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80",
+        images: ["https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80"],
+        ownerName: "Venkat Rao",
+        contactPhone: "9849012345",
+        whatsappPhone: "9849012345",
+        verified: true,
+        source: "rentalEasy",
+        status: "active",
+        createdAt: Date.now() - 3600000 * 3
+      },
+      {
+        id: "pg-hyd-2",
+        ownerId: "owner-blr-demo",
+        name: "Sowmya Executive Girls PG & Co-Living",
+        description: "Safe & premium ladies hostel with biometric fingerprint entry, 24/7 female security warden, AC rooms, attached washrooms, and hygienic home-style food.",
+        listingType: "pg",
+        gender: "girls",
+        area: "Madhapur",
+        city: "Hyderabad",
+        state: "Telangana",
+        pincode: "500081",
+        landmark: "Near Durgam Cheruvu Metro & Inorbit",
+        latitude: 17.4410,
+        longitude: 78.3840,
+        price: 9000,
+        roomTypes: [
+          { type: "single", price: 16000, totalBeds: 4, availableBeds: 0 },
+          { type: "double", price: 10000, totalBeds: 12, availableBeds: 2 },
+          { type: "triple", price: 8500, totalBeds: 15, availableBeds: 1 }
+        ],
+        vacancy: {
+          available: true,
+          totalBeds: 31,
+          availableBeds: 3,
+          lastUpdated: Date.now() - 1000 * 60 * 50 // 50 mins ago
+        },
+        food: { available: true, meals: "Breakfast, Lunch, Dinner", nonVegWeekends: true },
+        amenities: ["wifi", "ac", "attached_bath", "washing_machine", "power_backup", "cctv", "geyser"],
+        coverImage: "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=80",
+        images: ["https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=80"],
+        ownerName: "Lakshmi Prasanna",
+        contactPhone: "9885065432",
+        whatsappPhone: "9885065432",
+        verified: true,
+        source: "rentalEasy",
+        status: "active",
+        createdAt: Date.now() - 3600000 * 8
+      },
+      {
+        id: "pg-hyd-3",
+        ownerId: "owner-hyd-demo-3",
+        name: "Metro Hub Working Men's Hostel",
+        description: "Budget bachelors hostel. Hot water, Wi-Fi, 3 meals. Walkable to Cyber Towers and IT hubs.",
+        listingType: "hostel",
+        gender: "boys",
+        area: "Hitech City",
+        city: "Hyderabad",
+        state: "Telangana",
+        pincode: "500081",
+        landmark: "Opposite Cyber Gateway",
+        latitude: 17.4485,
+        longitude: 78.3750,
+        price: 6000,
+        roomTypes: [
+          { type: "double", price: 7500, totalBeds: 10, availableBeds: 0 },
+          { type: "triple", price: 6000, totalBeds: 15, availableBeds: 0 },
+          { type: "four", price: 5000, totalBeds: 20, availableBeds: 0 }
+        ],
+        vacancy: {
+          available: false,
+          totalBeds: 45,
+          availableBeds: 0,
+          lastUpdated: Date.now() - 1000 * 60 * 180 // 3 hours ago
+        },
+        food: { available: true, meals: "Breakfast, Dinner", nonVegWeekends: false },
+        amenities: ["wifi", "washing_machine", "geyser"],
+        coverImage: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80",
+        images: ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80"],
+        ownerName: "Naveen Goud",
+        contactPhone: "9440188990",
+        whatsappPhone: "9440188990",
+        verified: false,
+        source: "rentalEasy",
+        status: "full",
+        createdAt: Date.now() - 3600000 * 20
+      },
+      // EXTERNAL MAP DISCOVERED PLACE (OpenStreetMap - clearly identified)
+      {
+        id: "osm-place-1",
+        ownerId: null,
+        name: "Royal Student Dormitory & PG (Map Place)",
+        description: "Discovered student lodging on OpenStreetMap. Vacancies, pricing, and amenities are unverified by RentalEasy. Please visit directly.",
+        listingType: "pg",
+        gender: "boys",
+        area: "Kukatpally",
+        city: "Hyderabad",
+        state: "Telangana",
+        pincode: "500072",
+        landmark: "KPHB Phase 1",
+        latitude: 17.4910,
+        longitude: 78.4010,
+        price: null, // no fabricated price
+        roomTypes: [],
+        vacancy: null, // no fabricated vacancy
+        food: null,
+        amenities: [],
+        coverImage: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+        images: [],
+        ownerName: null,
+        contactPhone: null,
+        whatsappPhone: null,
+        verified: false,
+        source: "externalMap",
+        status: "active",
+        createdAt: Date.now() - 3600000 * 72
+      }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadProperties();
+      loadHostels();
+      loadFavorites();
+      autoAccessDeviceLocation();
+      renderHomeProperties();
+      renderHomeFeaturedPgs();
+      setupConfirmModalHandlers();
+    });
+
+    // Haversine formula
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function autoAccessDeviceLocation() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            userLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            renderHomeProperties();
+            renderHomeFeaturedPgs();
+            if (activeView === 'hostels') executePgSearch();
+          },
+          () => {
+            userLocation = { lat: 17.4851, lon: 78.3992 }; // Hyderabad default
+            renderHomeProperties();
+            renderHomeFeaturedPgs();
+          },
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+        );
+      } else {
+        userLocation = { lat: 17.4851, lon: 78.3992 };
+      }
+    }
+
+    function loadProperties() {
+      const stored = localStorage.getItem('rentaleasy_properties');
+      propertiesData = stored ? JSON.parse(stored) : [...INITIAL_SEED_PROPERTIES];
+      if (!stored) localStorage.setItem('rentaleasy_properties', JSON.stringify(propertiesData));
+    }
+
+    function loadHostels() {
+      const stored = localStorage.getItem('rentaleasy_hostels');
+      hostelsData = stored ? JSON.parse(stored) : [...INITIAL_SEED_HOSTELS];
+      if (!stored) localStorage.setItem('rentaleasy_hostels', JSON.stringify(hostelsData));
+    }
+
+    function saveHostelsToStorage() {
+      localStorage.setItem('rentaleasy_hostels', JSON.stringify(hostelsData));
+    }
+
+    function loadFavorites() {
+      const stored = localStorage.getItem('rentaleasy_favs');
+      savedFavoriteIds = stored ? new Set(JSON.parse(stored)) : new Set();
+      updateFavoritesBadge();
+    }
+
+    function saveFavorites() {
+      localStorage.setItem('rentaleasy_favs', JSON.stringify(Array.from(savedFavoriteIds)));
+      updateFavoritesBadge();
+    }
+
+    function updateFavoritesBadge() {
+      const badge = document.getElementById('savedCountBadge');
+      if (badge) {
+        badge.textContent = savedFavoriteIds.size;
+        badge.classList.toggle('hidden', savedFavoriteIds.size === 0);
+      }
+    }
+
+    function formatTimeAgo(timestamp) {
+      if (!timestamp) return "Recently";
+      const seconds = Math.floor((Date.now() - timestamp) / 1000);
+      if (seconds < 60) return "Just now";
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      return days === 1 ? "Yesterday" : `${days}d ago`;
+    }
+
+    function createHostelCardHtml(pg) {
+      const isFav = savedFavoriteIds.has(pg.id);
+      let distanceLabel = "";
+      if (userLocation && pg.latitude && pg.longitude) {
+        const dist = calculateDistance(userLocation.lat, userLocation.lon, pg.latitude, pg.longitude);
+        if (dist !== null) {
+          distanceLabel = `• <span class="text-blue-600 dark:text-blue-400 font-bold">${dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km'} away</span>`;
+        }
+      }
+
+      const isExternal = pg.source === 'externalMap';
+
+      // Live Vacancy Badge
+      let vacancyBadge = "";
+      if (isExternal) {
+        vacancyBadge = `<span class="bg-slate-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg">Unverified Vacancy</span>`;
+      } else if (pg.status === 'full' || (pg.vacancy && pg.vacancy.availableBeds === 0)) {
+        vacancyBadge = `<span class="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-lg animate-pulse">Currently Full</span>`;
+      } else if (pg.vacancy && pg.vacancy.availableBeds <= 2) {
+        vacancyBadge = `<span class="bg-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-lg">Only ${pg.vacancy.availableBeds} beds left</span>`;
+      } else if (pg.vacancy) {
+        vacancyBadge = `<span class="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg">${pg.vacancy.availableBeds} Beds Vacant</span>`;
+      }
+
+      // Vacancy freshness update
+      let vacancyFreshness = "";
+      if (!isExternal && pg.vacancy && pg.vacancy.lastUpdated) {
+        vacancyFreshness = `Vacancy updated ${formatTimeAgo(pg.vacancy.lastUpdated)}`;
+      } else if (isExternal) {
+        vacancyFreshness = "Map Place • Confirm in person";
+      }
+
+      // Price display
+      const priceDisplay = pg.price ? `₹${pg.price.toLocaleString('en-IN')}<span class="text-xs font-normal text-slate-500"> /mo</span>` : `<span class="text-xs text-slate-500 font-semibold">Contact for Price</span>`;
+
+      return `
+        <article class="bg-white dark:bg-slate-900 rounded-3xl border ${isExternal ? 'border-slate-300 dark:border-slate-800' : 'border-blue-200/80 dark:border-blue-900/60'} overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col group">
+          <div class="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800">
+            <img 
+              src="${pg.coverImage || 'https://placehold.co/800x600/0d9488/ffffff?text=PG+Hostel'}" 
+              alt="${pg.name}" 
+              loading="lazy" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            />
+            <div class="watermark-overlay absolute inset-0 pointer-events-none"></div>
+
+            <!-- Top Badges -->
+            <div class="absolute top-3 left-3 flex flex-wrap items-center gap-1.5 z-10">
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                pg.gender === 'girls' ? 'bg-pink-600 text-white' : (pg.gender === 'boys' ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white')
+              }">
+                ${pg.gender}
+              </span>
+              ${!isExternal ? `
+                <span class="bg-blue-950/80 text-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-xs flex items-center gap-1">
+                  <i class="fa-solid fa-circle-check text-blue-400"></i> RentalEasy Listed
+                </span>
+              ` : `
+                <span class="bg-slate-900/80 text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-xs">
+                  Map Place
+                </span>
+              `}
+            </div>
+
+            <!-- Favorite Button -->
+            <button onclick="toggleFavorite(event, '${pg.id}')" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 hover:text-red-500 flex items-center justify-center shadow-md backdrop-blur-xs transition">
+              <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart'} text-xs"></i>
+            </button>
+
+            <!-- Bottom Live Vacancy Badge -->
+            <div class="absolute bottom-2.5 left-3 right-3 flex items-center justify-between z-10">
+              ${vacancyBadge}
+              <span class="text-[10px] text-white bg-black/50 backdrop-blur-xs px-2 py-0.5 rounded-md">
+                ${pg.roomTypes && pg.roomTypes.length > 0 ? pg.roomTypes.map(r => r.type.charAt(0).toUpperCase() + r.type.slice(1)).join('/') : 'Hostel'}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+            <div>
+              <div class="flex items-baseline justify-between mb-1">
+                <div class="text-lg font-black text-slate-900 dark:text-white">${priceDisplay}</div>
+                <span class="text-[11px] font-bold uppercase ${isExternal ? 'text-slate-400' : 'text-blue-600 dark:text-blue-400'}">
+                  ${isExternal ? 'External place' : 'Verified Vacancy'}
+                </span>
+              </div>
+
+              <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm line-clamp-1">${pg.name}</h3>
+
+              <!-- Amenities Icons Strip -->
+              <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-2">
+                ${pg.food && pg.food.available ? `<span title="Food Included"><i class="fa-solid fa-utensils text-blue-500"></i> Food</span> •` : ''}
+                ${pg.amenities && pg.amenities.includes('ac') ? `<span title="AC Rooms Available"><i class="fa-solid fa-snowflake text-cyan-500"></i> AC</span> •` : ''}
+                ${pg.amenities && pg.amenities.includes('wifi') ? `<span title="Wi-Fi"><i class="fa-solid fa-wifi text-emerald-500"></i> Wi-Fi</span>` : ''}
+              </div>
+
+              <!-- Location & Distance -->
+              <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-2 truncate">
+                <i class="fa-solid fa-location-dot text-blue-600 shrink-0"></i>
+                <span class="truncate">${pg.area}, ${pg.city}</span>
+                ${distanceLabel}
+              </div>
+
+              <div class="text-[10px] text-slate-400 mt-1">
+                ${vacancyFreshness}
+              </div>
+            </div>
+
+            <!-- Card Action Footer -->
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+              ${!isExternal ? `
+                <a href="tel:+91${pg.contactPhone || '9849012345'}" class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-blue-500 flex items-center gap-1">
+                  <i class="fa-solid fa-phone text-blue-600 text-[10px]"></i>
+                  <span>Call</span>
+                </a>
+              ` : `
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${pg.latitude},${pg.longitude}" target="_blank" class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <i class="fa-solid fa-diamond-turn-right text-blue-600 text-[10px]"></i> Directions
+                </a>
+              `}
+              <button onclick="navigate('hostel-details', '${pg.id}')" class="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition text-center shadow-xs">
+                View Vacancy
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderHomeFeaturedPgs() {
+      const container = document.getElementById('homeFeaturedPgContainer');
+      if (!container) return;
+      const featured = hostelsData.filter(p => p.source === 'rentalEasy').slice(0, 3);
+      container.innerHTML = featured.map(createHostelCardHtml).join('');
+    }
+
+    function executePgSearch() {
+      const query = (document.getElementById('pgCollegeSearchInput')?.value || '').toLowerCase().trim();
+      const availFilter = document.getElementById('pgAvailabilityFilter')?.value || 'any';
+      const foodReq = document.getElementById('pgFilterFoodRequired')?.checked || false;
+      const acReq = document.getElementById('pgFilterAcRequired')?.checked || false;
+      const sortBy = document.getElementById('pgSortSelector')?.value || 'recommended';
+
+      let results = [...hostelsData];
+
+      // Gender filter
+      if (activePgGender !== 'all') {
+        results = results.filter(p => p.gender === activePgGender);
+      }
+
+      // Budget filter
+      results = results.filter(p => !p.price || p.price <= activePgMaxBudget);
+
+      // Sharing types filter
+      if (activePgSharing.size > 0) {
+        results = results.filter(p => {
+          if (!p.roomTypes || p.roomTypes.length === 0) return true;
+          return p.roomTypes.some(r => activePgSharing.has(r.type));
+        });
+      }
+
+      // Availability filter
+      if (availFilter === 'available') {
+        results = results.filter(p => p.vacancy && p.vacancy.availableBeds > 0);
+      }
+
+      // Food requirement
+      if (foodReq) {
+        results = results.filter(p => p.food && p.food.available);
+      }
+
+      // AC requirement
+      if (acReq) {
+        results = results.filter(p => p.amenities && p.amenities.includes('ac'));
+      }
+
+      // Text query (Area, landmark, city, college)
+      if (query) {
+        results = results.filter(p =>
+          (p.name && p.name.toLowerCase().includes(query)) ||
+          (p.area && p.area.toLowerCase().includes(query)) ||
+          (p.landmark && p.landmark.toLowerCase().includes(query)) ||
+          (p.city && p.city.toLowerCase().includes(query))
+        );
+      }
+
+      // Sort
+      results.sort((a, b) => {
+        if (sortBy === 'price_asc') return (a.price || 99999) - (b.price || 99999);
+        if (sortBy === 'price_desc') return (b.price || 0) - (a.price || 0);
+        if (sortBy === 'vacancies') return ((b.vacancy?.availableBeds || 0) - (a.vacancy?.availableBeds || 0));
+        if (sortBy === 'nearest' && userLocation) {
+          const dA = calculateDistance(userLocation.lat, userLocation.lon, a.latitude, a.longitude) || 99999;
+          const dB = calculateDistance(userLocation.lat, userLocation.lon, b.latitude, b.longitude) || 99999;
+          return dA - dB;
+        }
+        // Recommended default: Verified listings with vacancies first
+        const scoreA = (a.source === 'rentalEasy' ? 100 : 0) + (a.vacancy?.availableBeds || 0);
+        const scoreB = (b.source === 'rentalEasy' ? 100 : 0) + (b.vacancy?.availableBeds || 0);
+        return scoreB - scoreA;
+      });
+
+      renderPgResults(results);
+    }
+
+    function renderPgResults(results) {
+      const container = document.getElementById('pgListResultsContainer');
+      const emptyState = document.getElementById('pgNoResultsState');
+      const countBadge = document.getElementById('pgCountBadge');
+      if (!container) return;
+
+      if (countBadge) countBadge.textContent = `${results.length} found`;
+
+      if (results.length === 0) {
+        container.innerHTML = '';
+        emptyState?.classList.remove('hidden');
+      } else {
+        emptyState?.classList.add('hidden');
+        container.innerHTML = results.map(createHostelCardHtml).join('');
+      }
+
+      updatePgMapMarkers(results);
+    }
+
+    function updatePgMapMarkers(hostels) {
+      if (!pgLeafletMapInstance) return;
+      if (pgMapMarkersGroup) {
+        pgMapMarkersGroup.clearLayers();
+      } else {
+        pgMapMarkersGroup = L.layerGroup().addTo(pgLeafletMapInstance);
+      }
+
+      const bounds = [];
+      hostels.forEach(h => {
+        if (h.latitude && h.longitude) {
+          const latLng = [h.latitude, h.longitude];
+          bounds.push(latLng);
+
+          const isExt = h.source === 'externalMap';
+          const pinHtml = isExt 
+            ? `<div class="custom-map-pin-external">📍 ${h.name.substring(0, 14)}...</div>`
+            : `<div class="custom-map-pin-pg">🛏️ ₹${h.price ? h.price.toLocaleString('en-IN') : 'PG'}</div>`;
+
+          const marker = L.marker(latLng, {
+            icon: L.divIcon({ className: 'pg-pin', html: pinHtml, iconSize: [90, 30], iconAnchor: [45, 15] })
+          });
+
+          marker.on('click', () => navigate('hostel-details', h.id));
+          pgMapMarkersGroup.addLayer(marker);
+        }
+      });
+
+      if (bounds.length > 0) {
+        pgLeafletMapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      }
+    }
+
+    function initPgMapIfNeeded() {
+      if (!pgLeafletMapInstance) {
+        const center = userLocation ? [userLocation.lat, userLocation.lon] : [17.4851, 78.3992];
+        pgLeafletMapInstance = L.map('pgLeafletMap').setView(center, 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(pgLeafletMapInstance);
+      }
+    }
+
+    function setPgViewMode(mode) {
+      const listEl = document.getElementById('pgListResultsContainer');
+      const mapEl = document.getElementById('pgMapContainer');
+      const listBtn = document.getElementById('pgViewModeListBtn');
+      const mapBtn = document.getElementById('pgViewModeMapBtn');
+
+      if (mode === 'map') {
+        listEl.classList.add('hidden');
+        mapEl.classList.remove('hidden');
+        listBtn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-400";
+        mapBtn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs";
+        initPgMapIfNeeded();
+        setTimeout(() => { if (pgLeafletMapInstance) pgLeafletMapInstance.invalidateSize(); }, 150);
+      } else {
+        mapEl.classList.add('hidden');
+        listEl.classList.remove('hidden');
+        listBtn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs";
+        mapBtn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-400";
+      }
+    }
+
+    // Filter Helpers
+    function setPgGenderFilter(gender) {
+      activePgGender = gender;
+      ['pgGenderAll', 'pgGenderBoys', 'pgGenderGirls', 'pgGenderCoed'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.className = "py-1.5 rounded-xl text-xs font-extrabold transition text-slate-600 dark:text-slate-400";
+      });
+      const activeId = gender === 'all' ? 'pgGenderAll' : (gender === 'boys' ? 'pgGenderBoys' : (gender === 'girls' ? 'pgGenderGirls' : 'pgGenderCoed'));
+      const activeBtn = document.getElementById(activeId);
+      if (activeBtn) activeBtn.className = "py-1.5 rounded-xl text-xs font-extrabold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs";
+      executePgSearch();
+    }
+
+    function togglePgSharingFilter(type) {
+      if (activePgSharing.has(type)) activePgSharing.delete(type);
+      else activePgSharing.add(type);
+      document.querySelectorAll('.pg-share-chip').forEach(btn => {
+        const s = btn.getAttribute('data-share');
+        if (activePgSharing.has(s)) {
+          btn.className = "pg-share-chip px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white";
+        } else {
+          btn.className = "pg-share-chip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300";
+        }
+      });
+      executePgSearch();
+    }
+
+    function handlePgBudgetChange(val) {
+      activePgMaxBudget = Number(val);
+      document.getElementById('pgBudgetValLabel').textContent = `₹${Number(val).toLocaleString('en-IN')}`;
+      executePgSearch();
+    }
+
+    function resetPgFilters() {
+      activePgGender = 'all';
+      activePgSharing.clear();
+      activePgMaxBudget = 25000;
+      document.getElementById('pgBudgetRange').value = 25000;
+      document.getElementById('pgBudgetValLabel').textContent = "₹25,000";
+      document.getElementById('pgAvailabilityFilter').value = "any";
+      document.getElementById('pgFilterFoodRequired').checked = false;
+      document.getElementById('pgFilterAcRequired').checked = false;
+      document.getElementById('pgCollegeSearchInput').value = "";
+      setPgGenderFilter('all');
+      document.querySelectorAll('.pg-share-chip').forEach(btn => {
+        btn.className = "pg-share-chip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300";
+      });
+      executePgSearch();
+    }
+
+    function expandPgSearchRadius() {
+      resetPgFilters();
+      showToast("Expanded search radius across India", "info");
+    }
+
+    function handlePgSearchInputChange() {
+      clearTimeout(pgSearchDebounceTimer);
+      pgSearchDebounceTimer = setTimeout(() => executePgSearch(), 250);
+    }
+
+    function quickPgSearch(keyword) {
+      navigate('hostels');
+      const input = document.getElementById('pgCollegeSearchInput');
+      if (input) input.value = keyword;
+      executePgSearch();
+    }
+
+    function filterPgByTarget(target) {
+      const input = document.getElementById('pgCollegeSearchInput');
+      if (input) input.value = target;
+      executePgSearch();
+    }
+
+    function saveCurrentWorkplaceLocation() {
+      const val = document.getElementById('pgCollegeSearchInput')?.value.trim();
+      if (!val) {
+        showToast("Enter a college or office name first", "error");
+        return;
+      }
+      localStorage.setItem('rentaleasy_saved_college', val);
+      showToast(`Saved "${val}" to your quick search shortcuts!`, "success");
+    }
+
+    function openSmartRecommendationModal() {
+      openModal('smartPgModal');
+    }
+
+    function applySmartPgRecommendations(event) {
+      event.preventDefault();
+      const form = event.target;
+      const gender = form.elements['smartGender'].value;
+      const maxBudget = Number(document.getElementById('smartBudgetSelect').value);
+      const needFood = document.getElementById('smartNeedFood').checked;
+      const needAc = document.getElementById('smartNeedAc').checked;
+
+      closeModal('smartPgModal');
+      navigate('hostels');
+
+      setPgGenderFilter(gender);
+      document.getElementById('pgBudgetRange').value = maxBudget;
+      handlePgBudgetChange(maxBudget);
+      document.getElementById('pgFilterFoodRequired').checked = needFood;
+      document.getElementById('pgFilterAcRequired').checked = needAc;
+
+      executePgSearch();
+      showToast("Applied your personalized smart PG recommendations!", "success");
+    }
+
+    function renderHostelDetailsView(hostelId) {
+      const pg = hostelsData.find(h => h.id === hostelId);
+      const container = document.getElementById('hostelDetailContent');
+      if (!pg || !container) return;
+
+      currentDetailPgId = hostelId;
+      const isFav = savedFavoriteIds.has(pg.id);
+      const favIcon = document.getElementById('detailPgFavIcon');
+      if (favIcon) favIcon.className = isFav ? "fa-solid fa-heart text-red-500" : "fa-regular fa-heart";
+
+      const isExternal = pg.source === 'externalMap';
+      const whatsappMsg = encodeURIComponent(
+        `Hi ${pg.ownerName || 'Manager'}, I found your hostel "${pg.name}" on RentalEasy. I would like to check current bed availability and schedule a visit.`
+      );
+
+      container.innerHTML = `
+        <!-- Hero Image Banner -->
+        <div class="relative bg-slate-950 aspect-[16/9] max-h-[420px] w-full overflow-hidden">
+          <img src="${pg.coverImage || 'https://placehold.co/1200x800/0d9488/ffffff?text=Hostel'}" alt="${pg.name}" class="w-full h-full object-cover" />
+          <div class="watermark-overlay absolute inset-0 pointer-events-none"></div>
+          <div class="absolute top-4 left-4 flex gap-2">
+            <span class="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full ${
+              pg.gender === 'girls' ? 'bg-pink-600 text-white' : 'bg-blue-600 text-white'
+            }">${pg.gender} PG</span>
+            ${!isExternal ? `<span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full"><i class="fa-solid fa-circle-check"></i> RentalEasy Verified</span>` : ''}
+          </div>
+        </div>
+
+        <div class="p-6 sm:p-8 space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-5">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 capitalize">${pg.listingType}</span>
+              <h1 class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">${pg.name}</h1>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                <i class="fa-solid fa-location-dot text-blue-600"></i>
+                <span>${pg.area}, ${pg.city}, ${pg.state} - ${pg.pincode}</span>
+                ${pg.landmark ? `<span class="text-slate-400">(${pg.landmark})</span>` : ''}
+              </p>
+            </div>
+            <div class="text-left sm:text-right">
+              <div class="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">
+                ${pg.price ? `₹${pg.price.toLocaleString('en-IN')}<span class="text-xs font-normal text-slate-500"> /mo</span>` : 'Inquire for Price'}
+              </div>
+              <div class="text-[11px] text-slate-400">
+                ${pg.vacancy ? `${pg.vacancy.availableBeds} beds available right now` : 'External place'}
+              </div>
+            </div>
+          </div>
+
+          <!-- Room Sharing & Rates Matrix -->
+          ${pg.roomTypes && pg.roomTypes.length > 0 ? `
+            <div>
+              <h3 class="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">Room Sharing & Monthly Tariff</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                ${pg.roomTypes.map(r => `
+                  <div class="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-slate-800/50 border border-blue-100 dark:border-slate-700">
+                    <span class="text-xs font-bold capitalize text-slate-500">${r.type} Sharing</span>
+                    <div class="text-lg font-black text-slate-900 dark:text-white mt-0.5">₹${r.price.toLocaleString('en-IN')} /mo</div>
+                    <div class="text-[11px] font-bold ${r.availableBeds > 0 ? 'text-emerald-600' : 'text-red-500'} mt-1">
+                      ${r.availableBeds > 0 ? `✓ ${r.availableBeds} beds available` : 'Full'}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Food & Mess Inclusions -->
+          ${pg.food ? `
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+              <h3 class="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-2">Food & Mess Details</h3>
+              <p class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                ${pg.food.available ? `✓ 3 Meals Provided Daily: ${pg.food.meals}` : 'Self Cooking / No Mess Provided'}
+              </p>
+              ${pg.food.nonVegWeekends ? `<p class="text-xs text-slate-500 mt-1">✓ Non-vegetarian meals served on select weekends</p>` : ''}
+            </div>
+          ` : ''}
+
+          <!-- Description -->
+          <div>
+            <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-2">About This PG / Hostel</h3>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+              ${pg.description}
+            </p>
+          </div>
+
+          <!-- Trust & Safety Banner -->
+          <div class="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-3">
+            <i class="fa-solid fa-shield-halved text-base shrink-0 mt-0.5"></i>
+            <div>
+              <span class="font-bold">RentalEasy Safety Notice:</span>
+              <p class="mt-0.5">Always visit the accommodation and verify with the warden/landlord before making any advance payments or deposits.</p>
+            </div>
+          </div>
+
+          <!-- Direct Landlord Contact Section -->
+          <div class="p-5 rounded-3xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                <i class="fa-solid fa-user-check"></i>
+              </div>
+              <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400">Direct Landlord Contact</span>
+                <h4 class="font-bold text-slate-900 dark:text-white text-base">${pg.ownerName || 'Verified Property Manager'}</h4>
+                <p class="text-xs text-slate-500">Zero Brokerage Guarantee • Inspect Today</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              ${!isExternal ? `
+                <a href="tel:+91${pg.contactPhone || '9849012345'}" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs hover:border-blue-500 transition flex items-center justify-center gap-2 shadow-2xs">
+                  <i class="fa-solid fa-phone text-blue-600"></i>
+                  <span>Call Owner</span>
+                </a>
+                <a href="https://wa.me/91${pg.whatsappPhone || pg.contactPhone || '9849012345'}?text=${whatsappMsg}" target="_blank" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
+                  <i class="fa-brands fa-whatsapp text-sm"></i>
+                  <span>WhatsApp</span>
+                </a>
+              ` : `
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${pg.latitude},${pg.longitude}" target="_blank" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl bg-blue-600 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-diamond-turn-right"></i>
+                  <span>Get Directions on Map</span>
+                </a>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Owner Post PG Handlers
+    function handlePostPgClick() {
+      if (!window.currentUser) {
+        showToast("Please sign in to list your Hostel or PG", "info");
+        openModal('authModal');
+        return;
+      }
+      navigate('post-pg');
+    }
+
+    function handlePgFormSubmit(e) {
+      e.preventDefault();
+      if (!window.currentUser) {
+        openModal('authModal');
+        return;
+      }
+
+      const name = document.getElementById('formPgName').value.trim();
+      const gender = document.getElementById('formPgGender').value;
+      const description = document.getElementById('formPgDescription').value.trim();
+      const area = document.getElementById('formPgArea').value.trim();
+      const city = document.getElementById('formPgCity').value.trim();
+      const landmark = document.getElementById('formPgLandmark').value.trim();
+      const ownerName = document.getElementById('formPgOwnerName').value.trim();
+      const contactPhone = document.getElementById('formPgPhone').value.trim();
+      const whatsappPhone = document.getElementById('formPgWhatsapp').value.trim();
+
+      const priceSingle = Number(document.getElementById('pgPriceSingle').value) || 0;
+      const bedsSingle = Number(document.getElementById('pgBedsSingle').value) || 0;
+      const priceDouble = Number(document.getElementById('pgPriceDouble').value) || 8000;
+      const bedsDouble = Number(document.getElementById('pgBedsDouble').value) || 2;
+      const priceTriple = Number(document.getElementById('pgPriceTriple').value) || 0;
+      const bedsTriple = Number(document.getElementById('pgBedsTriple').value) || 0;
+
+      const roomTypes = [];
+      if (priceSingle > 0) roomTypes.push({ type: "single", price: priceSingle, totalBeds: bedsSingle + 2, availableBeds: bedsSingle });
+      if (priceDouble > 0) roomTypes.push({ type: "double", price: priceDouble, totalBeds: bedsDouble + 4, availableBeds: bedsDouble });
+      if (priceTriple > 0) roomTypes.push({ type: "triple", price: priceTriple, totalBeds: bedsTriple + 6, availableBeds: bedsTriple });
+
+      const totalAvailBeds = bedsSingle + bedsDouble + bedsTriple;
+
+      const newPg = {
+        id: `pg-${Date.now()}`,
+        ownerId: window.currentUser.uid,
+        name,
+        listingType: "pg",
+        gender,
+        description,
+        area,
+        city,
+        state: "Telangana",
+        pincode: "500072",
+        landmark,
+        latitude: userLocation ? userLocation.lat : 17.4930,
+        longitude: userLocation ? userLocation.lon : 78.3910,
+        price: priceDouble,
+        roomTypes,
+        vacancy: {
+          available: totalAvailBeds > 0,
+          totalBeds: totalAvailBeds + 10,
+          availableBeds: totalAvailBeds,
+          lastUpdated: Date.now()
+        },
+        food: {
+          available: document.getElementById('formPgFoodAvailable').checked,
+          meals: "Breakfast, Lunch, Dinner",
+          nonVegWeekends: document.getElementById('formPgNonVeg').checked
+        },
+        amenities: ["wifi", "ac", "attached_bath", "washing_machine", "geyser"],
+        coverImage: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80",
+        images: ["https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80"],
+        ownerName,
+        contactPhone,
+        whatsappPhone,
+        verified: true,
+        source: "rentalEasy",
+        status: totalAvailBeds > 0 ? "active" : "full",
+        createdAt: Date.now()
+      };
+
+      hostelsData.unshift(newPg);
+      saveHostelsToStorage();
+      showToast("Hostel / PG listing published successfully!", "success");
+      navigate('dashboard');
+    }
+
+    // Owner Vacancy Live Update Modal Handlers
+    function openVacancyUpdateModal(pgId) {
+      const pg = hostelsData.find(h => h.id === pgId);
+      if (!pg) return;
+      document.getElementById('vacancyTargetPgId').value = pgId;
+      document.getElementById('vacancyModalPgName').textContent = `Update Vacancy: ${pg.name}`;
+      document.getElementById('vacancyAvailableBedsInput').value = pg.vacancy?.availableBeds || 0;
+      document.getElementById('vacancyTotalBedsInput').value = pg.vacancy?.totalBeds || 20;
+      openModal('vacancyModal');
+    }
+
+    function handleVacancyUpdateSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('vacancyTargetPgId').value;
+      const availBeds = Number(document.getElementById('vacancyAvailableBedsInput').value);
+      const totalBeds = Number(document.getElementById('vacancyTotalBedsInput').value);
+
+      const pg = hostelsData.find(h => h.id === id);
+      if (pg) {
+        if (!pg.vacancy) pg.vacancy = {};
+        pg.vacancy.availableBeds = availBeds;
+        pg.vacancy.totalBeds = totalBeds;
+        pg.vacancy.available = availBeds > 0;
+        pg.vacancy.lastUpdated = Date.now();
+        pg.status = availBeds === 0 ? "full" : "active";
+
+        saveHostelsToStorage();
+        closeModal('vacancyModal');
+        showToast("Live vacancy updated and reflected in search results!", "success");
+        renderOwnerDashboard();
+      }
+    }
+
+    function renderOwnerDashboard() {
+      if (!window.currentUser) {
+        navigate('home');
+        openModal('authModal');
+        return;
+      }
+
+      const uid = window.currentUser.uid;
+      const myProperties = propertiesData.filter(p => p.ownerId === uid || uid === 'owner-hyd-demo');
+      const myPgs = hostelsData.filter(p => p.ownerId === uid || uid === 'owner-hyd-demo');
+      // Render PGs with Vacancy Stale Reminder Alert (Prompt #33)
+      const pgContainer = document.getElementById('ownerPgList');
+      if (pgContainer) {
+        if (myPgs.length === 0) {
+          pgContainer.innerHTML = `<p class="text-xs text-slate-400 py-3">No PG/Hostels listed yet. Post your first accommodation today!</p>`;
+        } else {
+          pgContainer.innerHTML = myPgs.map(pg => {
+            const ageHours = pg.vacancy?.lastUpdated ? (Date.now() - pg.vacancy.lastUpdated) / 3600000 : 999;
+            const needsReminder = ageHours > 24;
+
+            return `
+              <div class="p-3.5 rounded-2xl border ${needsReminder ? 'border-amber-300 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40'} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black uppercase text-blue-600">${pg.gender} PG</span>
+                    ${needsReminder ? `<span class="bg-amber-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-sm">⚠️ Please confirm vacancy</span>` : ''}
+                  </div>
+                  <h4 class="font-bold text-sm text-slate-900 dark:text-white">${pg.name}</h4>
+                  <div class="text-xs text-slate-500 mt-0.5">
+                    <span class="font-bold ${pg.status === 'full' ? 'text-red-500' : 'text-emerald-600'}">
+                      ${pg.vacancy?.availableBeds || 0} Available Beds
+                    </span> • Total Capacity: ${pg.vacancy?.totalBeds || 20} • Updated ${formatTimeAgo(pg.vacancy?.lastUpdated)}
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="openVacancyUpdateModal('${pg.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs">
+                    <i class="fa-solid fa-bed"></i> Update Vacancy
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Render Real Estate Properties
+      const propContainer = document.getElementById('ownerPropertiesList');
+      if (propContainer) {
+        if (myProperties.length === 0) {
+          propContainer.innerHTML = `<p class="text-xs text-slate-400 py-3">No real estate properties listed yet.</p>`;
+        } else {
+          propContainer.innerHTML = myProperties.map(prop => `
+            <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">${prop.title}</h4>
+                <div class="text-xs text-brand-600 font-extrabold">₹${prop.price.toLocaleString('en-IN')}</div>
+              </div>
+              <span class="text-xs font-bold text-emerald-600">Active</span>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    // Navigation Router
+    function navigate(viewName, param = null) {
+      activeView = viewName;
+      document.querySelectorAll('.page-view').forEach(view => view.classList.add('hidden'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Dynamic Page Title & SEO updates
+      const titles = {
+        home: "RentalEasy | Find Rental Homes, PGs, Hostels & Properties in India",
+        hostels: "Hostels & PGs Near You | Live Vacancies - RentalEasy",
+        about: "About RentalEasy | Property Discovery Platform Across India",
+        terms: "RentalEasy Terms & Conditions",
+        privacy: "RentalEasy Privacy Policy",
+        cookies: "RentalEasy Cookie Policy",
+        disclaimer: "RentalEasy Disclaimer & Platform Advisory",
+        safety: "RentalEasy Safety Guidelines & Verification Advice",
+        contact: "Contact Us & Support | RentalEasy India",
+        help: "Help Center & FAQs | RentalEasy",
+        dashboard: "Owner Dashboard | RentalEasy",
+        favorites: "Saved Properties & Hostels | RentalEasy",
+        'post-property': "Post Your Property For Free | RentalEasy",
+        'post-pg': "Post Hostel / PG Vacancy | RentalEasy"
+      };
+
+      if (titles[viewName]) {
+        document.title = titles[viewName];
+      }
+
+      if (viewName === 'home') {
+        document.getElementById('view-home').classList.remove('hidden');
+        renderHomeProperties();
+        renderHomeFeaturedPgs();
+      } else if (viewName === 'hostels') {
+        document.getElementById('view-hostels').classList.remove('hidden');
+        executePgSearch();
+      } else if (viewName === 'hostel-details') {
+        document.getElementById('view-hostel-details').classList.remove('hidden');
+        if (param) renderHostelDetailsView(param);
+      } else if (viewName === 'post-pg') {
+        document.getElementById('view-post-pg').classList.remove('hidden');
+      } else if (viewName === 'property-details') {
+        document.getElementById('view-property-details').classList.remove('hidden');
+        if (param) renderPropertyDetailsView(param);
+      } else if (viewName === 'post-property') {
+        document.getElementById('view-post-property').classList.remove('hidden');
+      } else if (viewName === 'dashboard') {
+        document.getElementById('view-dashboard').classList.remove('hidden');
+        renderOwnerDashboard();
+      } else if (viewName === 'favorites') {
+        document.getElementById('view-favorites').classList.remove('hidden');
+        renderFavoritesView();
+      } else if (viewName === 'about') {
+        document.getElementById('view-about').classList.remove('hidden');
+      } else if (viewName === 'terms') {
+        document.getElementById('view-terms').classList.remove('hidden');
+      } else if (viewName === 'privacy') {
+        document.getElementById('view-privacy').classList.remove('hidden');
+      } else if (viewName === 'cookies') {
+        document.getElementById('view-cookies').classList.remove('hidden');
+      } else if (viewName === 'disclaimer') {
+        document.getElementById('view-disclaimer').classList.remove('hidden');
+      } else if (viewName === 'safety') {
+        document.getElementById('view-safety').classList.remove('hidden');
+      } else if (viewName === 'contact') {
+        document.getElementById('view-contact').classList.remove('hidden');
+      } else if (viewName === 'help') {
+        document.getElementById('view-help').classList.remove('hidden');
+      }
+    }
+
+    function createPropertyCardHtml(property) {
+      const isFav = savedFavoriteIds.has(property.id);
+      let distanceLabel = "";
+      if (userLocation && property.latitude && property.longitude) {
+        const dist = calculateDistance(userLocation.lat, userLocation.lon, property.latitude, property.longitude);
+        if (dist !== null) {
+          distanceLabel = `• <span class="text-brand-600 dark:text-brand-400 font-bold">${dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km'} away</span>`;
+        }
+      }
+
+      const rawPhone = property.contactPhone || '9849012345';
+      const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+
+      return `
+        <article class="property-card bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col group">
+          <div class="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800 cursor-pointer" onclick="navigate('property-details', '${property.id}')">
+            <img 
+              src="${property.coverImage}" 
+              alt="${property.title}" 
+              loading="lazy" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            />
+            <div class="watermark-overlay absolute inset-0 pointer-events-none"></div>
+            <div class="absolute top-3 left-3 flex items-center gap-1.5">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md bg-brand-600 text-white">
+                ${property.listingType}
+              </span>
+            </div>
+            <button onclick="toggleFavorite(event, '${property.id}')" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 hover:text-red-500 flex items-center justify-center shadow-md backdrop-blur-xs transition">
+              <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart'} text-base"></i>
+            </button>
+          </div>
+          <div class="p-4 flex-1 flex flex-col justify-between">
+            <div onclick="navigate('property-details', '${property.id}')" class="cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <div class="text-lg font-black text-slate-900 dark:text-white">₹${property.price.toLocaleString('en-IN')}<span class="text-xs font-normal text-slate-500"> /mo</span></div>
+                <span class="text-xs uppercase font-bold text-slate-500">${property.propertyType}</span>
+              </div>
+              <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm line-clamp-1 mb-2 hover:text-brand-600 transition">${property.title}</h3>
+              <div class="text-xs text-slate-500 flex items-center gap-1.5 truncate">
+                <i class="fa-solid fa-location-dot text-brand-600"></i>
+                <span>${property.area}, ${property.city}</span>
+                ${distanceLabel}
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+              <span class="text-[11px] font-semibold text-slate-500 truncate max-w-[100px]">${property.ownerName ? `By ${property.ownerName}` : 'Owner'}</span>
+              <div class="flex items-center gap-2">
+                <a href="tel:+91${cleanPhone}" onclick="event.stopPropagation();" class="px-3 py-1.5 rounded-xl border border-brand-200 dark:border-brand-900/70 bg-brand-50/70 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 hover:bg-brand-600 hover:text-white dark:hover:bg-brand-600 dark:hover:text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs" title="Call Owner directly">
+                  <i class="fa-solid fa-phone text-[11px]"></i>
+                  <span>Call</span>
+                </a>
+                <button onclick="navigate('property-details', '${property.id}')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition">
+                  View
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderHomeProperties() {
+      const container = document.getElementById('listViewContainer');
+      if (!container) return;
+      container.innerHTML = propertiesData.map(createPropertyCardHtml).join('');
+    }
+
+    function renderPropertyDetailsView(propertyId) {
+      const property = propertiesData.find(p => p.id === propertyId);
+      const container = document.getElementById('propertyDetailContent');
+      if (!property || !container) return;
+      currentDetailId = propertyId;
+
+      const rawPhone = property.contactPhone || '9849012345';
+      const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+      const whatsappMsg = encodeURIComponent(
+        `Hi ${property.ownerName || 'Owner'}, I found your property "${property.title}" on RentalEasy. I would like to schedule a visit.`
+      );
+
+      container.innerHTML = `
+        <div class="relative bg-slate-950 aspect-[16/9] max-h-[420px] w-full overflow-hidden">
+          <img src="${property.coverImage}" class="w-full h-full object-cover" />
+          <div class="watermark-overlay absolute inset-0 pointer-events-none"></div>
+          <div class="absolute top-4 left-4 flex gap-2">
+            <span class="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-brand-600 text-white">${property.listingType}</span>
+            <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-slate-900/80 text-white backdrop-blur-xs">${property.propertyType}</span>
+          </div>
+        </div>
+        <div class="p-6 sm:p-8 space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-5">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-brand-600 capitalize">${property.propertyType}</span>
+              <h1 class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">${property.title}</h1>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1 flex items-center gap-1.5">
+                <i class="fa-solid fa-location-dot text-brand-600"></i>
+                <span>${property.area}, ${property.city} - ${property.landmark || ''}</span>
+              </p>
+            </div>
+            <div class="text-left sm:text-right">
+              <div class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                ₹${property.price.toLocaleString('en-IN')}<span class="text-xs font-normal text-slate-500"> /mo</span>
+              </div>
+              <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">
+                Verified Direct Owner Listing
+              </div>
+            </div>
+          </div>
+
+          <!-- Specs Overview -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Configuration</span>
+              <p class="text-sm font-black text-slate-800 dark:text-slate-100 mt-0.5">${property.bedrooms || 2} BHK</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Bathrooms</span>
+              <p class="text-sm font-black text-slate-800 dark:text-slate-100 mt-0.5">${property.bathrooms || 2} Baths</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Furnishing</span>
+              <p class="text-sm font-black text-slate-800 dark:text-slate-100 mt-0.5 capitalize">${property.furnishing ? property.furnishing.replace('-', ' ') : 'Semi Furnished'}</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Built-up Area</span>
+              <p class="text-sm font-black text-slate-800 dark:text-slate-100 mt-0.5">${property.builtUpArea || 1200} sq.ft</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-2">About This Property</h3>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">${property.description}</p>
+          </div>
+
+          <!-- Direct Landlord Contact Section with Call Dialer -->
+          <div class="p-5 rounded-3xl bg-brand-50/70 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                <i class="fa-solid fa-user-check"></i>
+              </div>
+              <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-brand-600 dark:text-brand-400">Direct Landlord Contact</span>
+                <h4 class="font-bold text-slate-900 dark:text-white text-base">${property.ownerName || 'Verified Property Owner'}</h4>
+                <p class="text-xs text-slate-500">Zero Brokerage Guarantee • Tap to call or message</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 w-full sm:w-auto">
+              <a href="tel:+91${cleanPhone}" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-phone text-sm"></i>
+                <span>Call Owner</span>
+              </a>
+              <a href="https://wa.me/91${property.whatsappPhone || cleanPhone}?text=${whatsappMsg}" target="_blank" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
+                <i class="fa-brands fa-whatsapp text-sm"></i>
+                <span>WhatsApp</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderFavoritesView() {
+      const container = document.getElementById('favoritesListContainer');
+      const emptyState = document.getElementById('favoritesEmptyState');
+      if (!container) return;
+
+      const favProps = propertiesData.filter(p => savedFavoriteIds.has(p.id));
+      const favHostels = hostelsData.filter(h => savedFavoriteIds.has(h.id));
+
+      if (favProps.length === 0 && favHostels.length === 0) {
+        container.innerHTML = '';
+        emptyState?.classList.remove('hidden');
+      } else {
+        emptyState?.classList.add('hidden');
+        container.innerHTML = [
+          ...favProps.map(createPropertyCardHtml),
+          ...favHostels.map(createHostelCardHtml)
+        ].join('');
+      }
+    }
+
+    function toggleFavorite(event, id) {
+      if (event) event.stopPropagation();
+      if (savedFavoriteIds.has(id)) {
+        savedFavoriteIds.delete(id);
+        showToast("Removed from saved favorites", "info");
+      } else {
+        savedFavoriteIds.add(id);
+        showToast("Saved to favorites!", "success");
+      }
+      saveFavorites();
+      renderHomeProperties();
+      if (activeView === 'hostels') executePgSearch();
+      if (activeView === 'favorites') renderFavoritesView();
+    }
+
+    function toggleFavoriteCurrent() {
+      if (currentDetailId) toggleFavorite(null, currentDetailId);
+    }
+
+    function toggleFavoriteCurrentPg() {
+      if (currentDetailPgId) toggleFavorite(null, currentDetailPgId);
+    }
+
+    // Filter controls
+    function setHeroTab(type) {
+      activeListingTypeFilter = type;
+      ['heroTabRent', 'heroTabSale', 'heroTabLease'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.className = "px-4 py-1.5 rounded-xl text-xs font-extrabold transition text-slate-600 dark:text-slate-400";
+      });
+      const activeBtnId = type === 'rent' ? 'heroTabRent' : (type === 'sale' ? 'heroTabSale' : 'heroTabLease');
+      const activeBtn = document.getElementById(activeBtnId);
+      if (activeBtn) activeBtn.className = "px-4 py-1.5 rounded-xl text-xs font-extrabold transition bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-300 shadow-2xs";
+      executeSearch();
+    }
+
+    function setProximityRadius(radius) {
+      currentProximityRadius = radius;
+      document.querySelectorAll('.proximity-btn').forEach(btn => {
+        const r = btn.getAttribute('data-radius');
+        btn.className = (String(r) === String(radius))
+          ? "proximity-btn active-radius px-2.5 py-1 rounded-xl text-[11px] font-bold border border-brand-500 bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 transition"
+          : "proximity-btn px-2.5 py-1 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition";
+      });
+      executeSearch();
+    }
+
+    function toggleBhkFilter(bhk) {
+      if (activeBhkFilters.has(bhk)) activeBhkFilters.delete(bhk);
+      else activeBhkFilters.add(bhk);
+      document.querySelectorAll('.bhk-chip').forEach(btn => {
+        const b = btn.getAttribute('data-bhk');
+        btn.className = activeBhkFilters.has(b)
+          ? "bhk-chip px-2.5 py-1 rounded-xl text-xs font-bold bg-brand-600 text-white transition"
+          : "bhk-chip px-2.5 py-1 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition";
+      });
+      executeSearch();
+    }
+
+    function executeSearch() {
+      renderHomeProperties();
+    }
+
+    function handleSearchInputChange() {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => executeSearch(), 250);
+    }
+
+    function filterByTransaction(type) {
+      navigate('home');
+      setHeroTab(type);
+    }
+
+    function setViewMode(mode) {
+      const listEl = document.getElementById('listViewContainer');
+      const mapEl = document.getElementById('mapViewContainer');
+      if (mode === 'map') {
+        listEl.classList.add('hidden');
+        mapEl.classList.remove('hidden');
+        if (!leafletMapInstance) {
+          const center = userLocation ? [userLocation.lat, userLocation.lon] : [17.4851, 78.3992];
+          leafletMapInstance = L.map('leafletMap').setView(center, 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(leafletMapInstance);
+        }
+      } else {
+        mapEl.classList.add('hidden');
+        listEl.classList.remove('hidden');
+      }
+    }
+
+    // Modal & Toast Helpers
+    function openModal(id) {
+      document.getElementById(id)?.classList.remove('hidden');
+    }
+    function closeModal(id) {
+      document.getElementById(id)?.classList.add('hidden');
+    }
+
+    function showToast(message, type = 'info') {
+      const box = document.getElementById('toastBox');
+      if (!box) return;
+      const toast = document.createElement('div');
+      toast.className = `bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 transition duration-300 pointer-events-auto`;
+      toast.innerHTML = `<i class="fa-solid fa-circle-info text-brand-400"></i> <span>${message}</span>`;
+      box.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    function setupConfirmModalHandlers() {
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+      const okBtn = document.getElementById('confirmOkBtn');
+      const modal = document.getElementById('confirmModal');
+      if (cancelBtn) cancelBtn.onclick = () => modal.classList.add('hidden');
+      if (okBtn) okBtn.onclick = () => {
+        modal.classList.add('hidden');
+        if (confirmCallback) confirmCallback();
+      };
+    }
+
+    // Authentication Handlers
+    window.currentUser = null;
+    window.handleAuthStateChange = function(user) {
+      window.currentUser = user;
+      document.getElementById('loginBtn')?.classList.toggle('hidden', !!user);
+      document.getElementById('userProfileBtnContainer')?.classList.toggle('hidden', !user);
+      if (user) {
+        document.getElementById('navUserName').textContent = user.displayName || 'Owner';
+        document.getElementById('navUserPhoto').src = user.photoURL || 'https://placehold.co/80x80/0d9488/ffffff?text=User';
+      }
+    };
+
+    function simulateDemoSignIn() {
+      const demoUser = {
+        uid: "owner-hyd-demo",
+        displayName: "Rajeshwar Rao",
+        email: "rajeshwar.rao@rentaleasy.in",
+        photoURL: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80"
+      };
+      window.handleAuthStateChange(demoUser);
+      closeModal('authModal');
+      showToast("Signed in as Rajeshwar Rao (Demo Landlord)", "success");
+    }
+
+    async function handleGoogleSignIn() {
+      simulateDemoSignIn();
+    }
+
+    function handleSignOut() {
+      window.handleAuthStateChange(null);
+      showToast("Signed out successfully", "info");
+      navigate('home');
+    }
+
+    function handleUserMobNavClick() {
+      if (window.currentUser) navigate('dashboard');
+      else openModal('authModal');
+    }
+
+    function toggleUserDropdown() {
+      document.getElementById('userDropdownMenu')?.classList.toggle('hidden');
+    }
+    function closeUserDropdown() {
+      document.getElementById('userDropdownMenu')?.classList.add('hidden');
+    }
+
+    function handlePostPropertyClick() {
+      if (!window.currentUser) {
+        showToast("Sign in to list your property", "info");
+        openModal('authModal');
+        return;
+      }
+      navigate('post-property');
+    }
+
+    function handlePropertySubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('formTitle').value;
+      const price = Number(document.getElementById('formPrice').value);
+      const newProp = {
+        id: `prop-${Date.now()}`,
+        ownerId: window.currentUser.uid,
+        title,
+        description: document.getElementById('formDescription').value,
+        listingType: document.getElementById('formListingType').value,
+        propertyType: document.getElementById('formPropertyType').value,
+        price,
+        bedrooms: Number(document.getElementById('formBedrooms').value),
+        bathrooms: Number(document.getElementById('formBathrooms').value),
+        area: document.getElementById('formAreaName').value,
+        city: document.getElementById('formCity').value,
+        coverImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80",
+        ownerName: document.getElementById('formOwnerName').value,
+        contactPhone: document.getElementById('formPhone').value,
+        status: "active",
+        createdAt: Date.now()
+      };
+      propertiesData.unshift(newProp);
+      showToast("Listing published live!", "success");
+      navigate('dashboard');
+    }
+
+    function openReportModal() { openModal('reportModal'); }
+    function submitPropertyReport(e) {
+      e.preventDefault();
+      closeModal('reportModal');
+      showToast("Incident report logged for review.", "success");
+    }
+
+    // Configurable Support Email & Contact Form Handler
+    const SUPPORT_EMAIL = "support@rentaleasy.in";
+
+    function handleContactFormSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('contactFormName')?.value.trim();
+      const email = document.getElementById('contactFormEmail')?.value.trim();
+      const subject = document.getElementById('contactFormSubject')?.value;
+      const message = document.getElementById('contactFormMessage')?.value.trim();
+
+      if (!name || !email || !message) {
+        showToast("Please fill in all required fields", "error");
+        return;
+      }
+
+      showToast(`Thank you, ${name}! Your message has been sent to our support desk.`, "success");
+      e.target.reset();
+      setTimeout(() => navigate('home'), 1500);
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('rentaleasy_theme') || 'light';
+      if (saved === 'dark') document.documentElement.classList.add('dark');
+    }
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('rentaleasy_theme', isDark ? 'dark' : 'light');
+    }
+
+    // Config Rules Specs
+    const SPECS = {
+      rules: `// FIRESTORE PRODUCTION SECURITY RULES
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // PRIVATE OWNER POSTING TEMPLATES & PROFILES
+      match /postingProfiles/{profileId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // PRIVATE MEDIA LIBRARY
+      match /media/{mediaId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // PRIVATE UNFINISHED DRAFTS
+      match /drafts/{draftId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    match /properties/{propertyId} {
+      allow read: if resource.data.status == 'active' || (request.auth != null && request.auth.uid == resource.data.ownerId);
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+    match /hostels/{hostelId} {
+      allow read: if resource.data.status == 'active' || resource.data.status == 'full' || (request.auth != null && request.auth.uid == resource.data.ownerId);
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+  }
+}`,
+      storageRules: `// FIREBASE STORAGE SECURITY RULES WITH IMMUTABLE CACHE-CONTROL
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Property and PG listing images
+    match /property-images/{ownerId}/{entityId}/{imageId} {
+      // Public read access for listing display
+      allow read: if true;
+      // Authenticated owner can create and delete images
+      allow write: if request.auth != null && request.auth.uid == ownerId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == ownerId;
+    }
+  }
+}`
+    };
+
+    function openConfigModal(type) {
+      document.getElementById('configModalContent').innerHTML = `<pre class="whitespace-pre-wrap">${SPECS[type] || SPECS.rules}</pre>`;
+      openModal('configModal');
+    }
+    function copyConfigContent() {
+      navigator.clipboard.writeText(SPECS.rules);
+      showToast("Rules copied to clipboard", "success");
+    }
+  </script>
+</body>
+</html>
